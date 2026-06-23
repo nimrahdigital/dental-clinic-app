@@ -1,0 +1,1702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DentalCare — Clinic Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+<!-- React -->
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<!-- Supabase: browser-ready build, with automatic fallback to a second CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+  // If jsdelivr failed to load Supabase, try unpkg as a fallback
+  if (typeof window.supabase === 'undefined') {
+    document.write('<script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"><\/script>');
+  }
+</script>
+
+<style>
+  :root{
+    --navy:#0d2b2e;
+    --navy-2:#123a3e;
+    --teal:#0e8074;
+    --teal-light:#e3f3ef;
+    --mint:#5fd9b8;
+    --coral:#e8744f;
+    --coral-light:#fdebe2;
+    --paper:#f7f5f0;
+    --ink:#13201f;
+    --muted:#647571;
+    --line:#dde6e2;
+    --white:#ffffff;
+    --red:#c0392b;
+    --red-light:#fbeae8;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Inter',sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    font-size:14px;
+  }
+  h1,h2,h3,h4{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  .mono{font-family:'IBM Plex Mono', monospace;}
+  #root{min-height:100vh;}
+  button{font-family:inherit;}
+  a{color:var(--teal);text-decoration:none;}
+
+  /* ===== Auth screens ===== */
+  .auth-shell{
+    min-height:100vh;
+    display:flex;
+    background:var(--navy);
+  }
+  .auth-art{
+    flex:1.1;
+    background:radial-gradient(circle at 30% 20%, #16484a 0%, var(--navy) 60%);
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding:60px;
+    color:#fff;
+    position:relative;
+    overflow:hidden;
+  }
+  .auth-art .toothmark{
+    position:absolute;
+    right:-60px;
+    bottom:-60px;
+    opacity:0.08;
+  }
+  .auth-art .brandmark{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:50px;
+  }
+  .auth-art .brandmark .logo-img{width:38px;height:38px;border-radius:10px;object-fit:cover;}
+  .auth-art .brandmark .mark{
+    width:38px;height:38px;background:var(--mint);border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Fraunces',serif;font-weight:700;color:var(--navy);font-size:16px;
+  }
+  .auth-art .brandmark .name{font-family:'Fraunces',serif;font-size:19px;font-weight:600;}
+  .auth-art h1{font-size:38px;line-height:1.15;max-width:420px;color:#fff;}
+  .auth-art .sub{font-size:14.5px;opacity:0.65;margin-top:16px;max-width:380px;line-height:1.6;}
+  .auth-art .stat-row{display:flex;gap:32px;margin-top:48px;}
+  .auth-art .stat{}
+  .auth-art .stat .n{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;color:var(--mint);}
+  .auth-art .stat .l{font-size:11.5px;opacity:0.55;margin-top:3px;}
+
+  .auth-panel{
+    width:460px;
+    background:var(--paper);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:40px;
+  }
+  .auth-card{
+    width:100%;
+    max-width:360px;
+  }
+  .auth-card .eyebrow{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:8px;}
+  .auth-card h2{font-size:24px;margin-bottom:6px;}
+  .auth-card .sub{font-size:13px;color:var(--muted);margin-bottom:26px;}
+
+  label{font-size:12.5px;font-weight:600;display:block;margin-bottom:6px;color:var(--ink);}
+  input,select,textarea{
+    width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:9px;
+    font-size:13.5px;font-family:inherit;margin-bottom:16px;background:#fff;
+  }
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--teal);outline-offset:1px;border-color:var(--teal);}
+  input::placeholder{color:#a8b5b1;}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;
+    padding:11px 18px;border-radius:9px;border:none;
+    font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;
+    transition:transform .08s, box-shadow .15s;
+  }
+  .btn:active{transform:scale(0.98);}
+  .btn-primary{background:var(--teal);color:#fff;}
+  .btn-primary:hover{background:#0a6b61;}
+  .btn-primary:disabled{background:#9bc4be;cursor:not-allowed;}
+  .btn-outline{background:#fff;border:1.5px solid var(--line);color:var(--ink);}
+  .btn-outline:hover{border-color:var(--teal);color:var(--teal);}
+  .btn-coral{background:var(--coral);color:#fff;}
+  .btn-coral:hover{background:#d35f3a;}
+  .btn-danger{background:transparent;color:var(--red);}
+  .btn-danger:hover{background:var(--red-light);}
+  .btn-block{width:100%;}
+  .btn-sm{padding:7px 13px;font-size:12.5px;}
+
+  .role-toggle{
+    display:flex;
+    background:var(--teal-light);
+    border-radius:10px;
+    padding:4px;
+    margin-bottom:22px;
+  }
+  .role-toggle button{
+    flex:1;background:transparent;border:none;padding:9px;border-radius:7px;
+    font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;
+  }
+  .role-toggle button.active{background:#fff;color:var(--navy);box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+
+  .error-box{
+    background:var(--red-light);color:var(--red);font-size:12.5px;
+    padding:10px 13px;border-radius:8px;margin-bottom:14px;
+  }
+  .info-box{
+    background:#fff8ec;border:1px solid #f3e2bd;color:#8a6116;font-size:12.5px;
+    padding:11px 14px;border-radius:8px;margin-bottom:16px;
+  }
+  .success-box{
+    background:#e7f6ec;color:#1e8e4e;font-size:12.5px;
+    padding:10px 13px;border-radius:8px;margin-bottom:14px;
+  }
+
+  .center-card{
+    max-width:440px;margin:60px auto;text-align:center;
+    background:#fff;border:1px solid var(--line);border-radius:14px;padding:42px 34px;
+  }
+  .center-card .ic{font-size:46px;margin-bottom:14px;}
+
+  .spinner{
+    width:18px;height:18px;border-radius:50%;
+    border:2.5px solid rgba(255,255,255,0.4);border-top-color:#fff;
+    animation:spin 0.7s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .loading-screen{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:var(--navy);color:#fff;flex-direction:column;gap:14px;
+  }
+  .loading-screen .dot-spin{
+    width:34px;height:34px;border-radius:50%;
+    border:3px solid rgba(255,255,255,0.2);border-top-color:var(--mint);
+    animation:spin 0.8s linear infinite;
+  }
+
+  @media (max-width:880px){
+    .auth-art{display:none;}
+    .auth-panel{width:100%;}
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+if (typeof window.supabase === 'undefined' || !window.supabase.createClient) {
+  document.getElementById('root').innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0d2b2e;color:#fff;font-family:sans-serif;text-align:center;padding:20px;">' + '<div><h2 style="margin-bottom:10px;">Could not load the Supabase library</h2>' + '<p style="opacity:0.7;max-width:400px;">Please check your internet connection and refresh the page. If this keeps happening, the CDN script may be blocked.</p></div></div>';
+  throw new Error('Supabase library failed to load from CDN');
+}
+const {
+  useState,
+  useEffect,
+  useContext,
+  createContext,
+  useRef
+} = React;
+
+// ============================================
+// SUPABASE CONFIG
+// ============================================
+const SUPABASE_URL = "https://wfnrlnwdwfqkkjawegdj.supabase.co";
+const SUPABASE_KEY = "sb_publishable_XOGQw7UcESCjbrx0iHyH0g_DGTy2cfc";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ============================================
+// AUTH CONTEXT
+// ============================================
+const AuthContext = createContext(null);
+function useAuth() {
+  return useContext(AuthContext);
+}
+function AuthProvider({
+  children
+}) {
+  const [session, setSession] = useState(undefined); // undefined = loading
+  const [profile, setProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+  async function loadProfile(userId) {
+    setProfileLoading(true);
+    const {
+      data,
+      error
+    } = await sb.from('profiles').select('*').eq('id', userId).single();
+    if (!error) setProfile(data);
+    setProfileLoading(false);
+  }
+  useEffect(() => {
+    sb.auth.getSession().then(({
+      data
+    }) => {
+      setSession(data.session);
+      if (data.session) loadProfile(data.session.user.id);
+    });
+    const {
+      data: listener
+    } = sb.auth.onAuthStateChange((_event, sess) => {
+      setSession(sess);
+      if (sess) loadProfile(sess.user.id);else setProfile(null);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
+  async function refreshProfile() {
+    if (session) await loadProfile(session.user.id);
+  }
+  async function logout() {
+    await sb.auth.signOut();
+    setProfile(null);
+  }
+  return /*#__PURE__*/React.createElement(AuthContext.Provider, {
+    value: {
+      session,
+      profile,
+      profileLoading,
+      refreshProfile,
+      logout
+    }
+  }, children);
+}
+
+// ============================================
+// TOAST
+// ============================================
+const ToastContext = createContext(null);
+function useToast() {
+  return useContext(ToastContext);
+}
+function ToastProvider({
+  children
+}) {
+  const [toast, setToast] = useState(null);
+  function show(msg, type = 'info') {
+    setToast({
+      msg,
+      type
+    });
+    setTimeout(() => setToast(null), 2600);
+  }
+  return /*#__PURE__*/React.createElement(ToastContext.Provider, {
+    value: show
+  }, children, toast && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'fixed',
+      bottom: 26,
+      right: 28,
+      zIndex: 200,
+      background: toast.type === 'error' ? 'var(--red)' : 'var(--navy)',
+      color: '#fff',
+      padding: '13px 20px',
+      borderRadius: 10,
+      fontSize: 13,
+      fontWeight: 600,
+      boxShadow: '0 10px 30px rgba(0,0,0,0.25)',
+      maxWidth: 340
+    }
+  }, toast.msg));
+}
+
+// ============================================
+// LOGO HOOK — fetch clinic settings (name + logo)
+// ============================================
+function useClinicSettings() {
+  const [settings, setSettings] = useState({
+    clinic_name: 'DentalCare',
+    logo_url: null
+  });
+  useEffect(() => {
+    sb.from('clinic_settings').select('*').eq('id', 1).single().then(({
+      data
+    }) => {
+      if (data) setSettings(data);
+    });
+  }, []);
+  return settings;
+}
+
+// ============================================
+// SHARED: Brand mark (logo or fallback letter mark)
+// ============================================
+function BrandMark({
+  settings,
+  size = 38,
+  dark = false
+}) {
+  if (settings.logo_url) {
+    return /*#__PURE__*/React.createElement("img", {
+      src: settings.logo_url,
+      className: "logo-img",
+      style: {
+        width: size,
+        height: size
+      },
+      alt: "logo"
+    });
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "mark",
+    style: {
+      width: size,
+      height: size,
+      fontSize: size * 0.42
+    }
+  }, settings.clinic_name ? settings.clinic_name[0] : 'D');
+}
+
+// ============================================
+// TOOTH SVG WATERMARK (signature element)
+// ============================================
+function ToothMark({
+  size = 320
+}) {
+  return /*#__PURE__*/React.createElement("svg", {
+    className: "toothmark",
+    width: size,
+    height: size,
+    viewBox: "0 0 200 200",
+    fill: "none"
+  }, /*#__PURE__*/React.createElement("path", {
+    d: "M100 20c-22 0-34 14-34 32 0 10 3 20 3 34 0 18-8 34-8 50 0 14 8 24 18 24 12 0 14-20 21-20s9 20 21 20c10 0 18-10 18-24 0-16-8-32-8-50 0-14 3-24 3-34 0-18-12-32-34-32z",
+    stroke: "white",
+    strokeWidth: "3"
+  }));
+}
+
+// ============================================
+// LOGIN SCREEN
+// ============================================
+function LoginScreen({
+  goSignup
+}) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+  const settings = useClinicSettings();
+  const toast = useToast();
+  async function handleLogin(e) {
+    e.preventDefault();
+    setErr('');
+    setLoading(true);
+    const {
+      error
+    } = await sb.auth.signInWithPassword({
+      email,
+      password
+    });
+    setLoading(false);
+    if (error) {
+      setErr(error.message === 'Invalid login credentials' ? 'Incorrect email or password.' : error.message);
+    }
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "auth-shell"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "auth-art"
+  }, /*#__PURE__*/React.createElement(ToothMark, null), /*#__PURE__*/React.createElement("div", {
+    className: "brandmark"
+  }, /*#__PURE__*/React.createElement(BrandMark, {
+    settings: settings
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "name"
+  }, settings.clinic_name)), /*#__PURE__*/React.createElement("h1", null, "Run your clinic like the practice patients brag about."), /*#__PURE__*/React.createElement("p", {
+    className: "sub"
+  }, "One place for appointments, dental charts, prescriptions, and billing — built for the rhythm of a real dental practice."), /*#__PURE__*/React.createElement("div", {
+    className: "stat-row"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "stat"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "n"
+  }, "8"), /*#__PURE__*/React.createElement("div", {
+    className: "l"
+  }, "Avg. visits tracked / patient")), /*#__PURE__*/React.createElement("div", {
+    className: "stat"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "n"
+  }, "32"), /*#__PURE__*/React.createElement("div", {
+    className: "l"
+  }, "Teeth charted digitally")), /*#__PURE__*/React.createElement("div", {
+    className: "stat"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "n"
+  }, "100%"), /*#__PURE__*/React.createElement("div", {
+    className: "l"
+  }, "Paperless billing")))), /*#__PURE__*/React.createElement("div", {
+    className: "auth-panel"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "auth-card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "eyebrow"
+  }, "Sign in"), /*#__PURE__*/React.createElement("h2", null, "Welcome back"), /*#__PURE__*/React.createElement("p", {
+    className: "sub"
+  }, "Log in to your clinic account"), err && /*#__PURE__*/React.createElement("div", {
+    className: "error-box"
+  }, err), /*#__PURE__*/React.createElement("form", {
+    onSubmit: handleLogin
+  }, /*#__PURE__*/React.createElement("label", null, "Email"), /*#__PURE__*/React.createElement("input", {
+    type: "email",
+    value: email,
+    onChange: e => setEmail(e.target.value),
+    placeholder: "you@email.com",
+    required: true
+  }), /*#__PURE__*/React.createElement("label", null, "Password"), /*#__PURE__*/React.createElement("input", {
+    type: "password",
+    value: password,
+    onChange: e => setPassword(e.target.value),
+    placeholder: "••••••••",
+    required: true
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-primary btn-block",
+    disabled: loading,
+    type: "submit"
+  }, loading ? /*#__PURE__*/React.createElement("span", {
+    className: "spinner"
+  }) : 'Log In')), /*#__PURE__*/React.createElement("p", {
+    style: {
+      textAlign: 'center',
+      fontSize: 12.5,
+      color: 'var(--muted)',
+      marginTop: 16
+    }
+  }, "New here? ", /*#__PURE__*/React.createElement("a", {
+    href: "#",
+    onClick: e => {
+      e.preventDefault();
+      goSignup();
+    },
+    style: {
+      fontWeight: 600
+    }
+  }, "Create an account")))));
+}
+
+// ============================================
+// SIGNUP SCREEN (role: patient or doctor)
+// ============================================
+function SignupScreen({
+  goLogin
+}) {
+  const [role, setRole] = useState('patient');
+  const [form, setForm] = useState({
+    full_name: '',
+    email: '',
+    password: '',
+    phone: '',
+    specialization: '',
+    license_number: '',
+    years_experience: '',
+    date_of_birth: '',
+    gender: 'male'
+  });
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+  const [done, setDone] = useState(false);
+  const settings = useClinicSettings();
+  function update(field, value) {
+    setForm(f => ({
+      ...f,
+      [field]: value
+    }));
+  }
+  async function handleSignup(e) {
+    e.preventDefault();
+    setErr('');
+    if (form.password.length < 6) {
+      setErr('Password must be at least 6 characters.');
+      return;
+    }
+    setLoading(true);
+    const {
+      data,
+      error
+    } = await sb.auth.signUp({
+      email: form.email,
+      password: form.password
+    });
+    if (error) {
+      setLoading(false);
+      setErr(error.message);
+      return;
+    }
+    const userId = data.user?.id;
+    if (!userId) {
+      setLoading(false);
+      setErr('Could not create account. Please try again.');
+      return;
+    }
+
+    // Make sure the session is fully established before inserting the profile
+    // (auth.uid() in RLS policies depends on this being set)
+    let sessionReady = !!data.session;
+    if (!sessionReady) {
+      const { data: sessCheck } = await sb.auth.getSession();
+      sessionReady = !!sessCheck.session;
+    }
+    if (!sessionReady) {
+      // try signing in directly, in case email confirmation is disabled but session wasn't returned
+      const { error: signInErr } = await sb.auth.signInWithPassword({ email: form.email, password: form.password });
+      if (signInErr) {
+        setLoading(false);
+        setErr('Account created. Please log in to finish setting up your profile.');
+        return;
+      }
+    }
+
+    const profileData = {
+      id: userId,
+      email: form.email,
+      full_name: form.full_name,
+      role: role,
+      status: 'pending',
+      phone: form.phone
+    };
+    if (role === 'doctor') {
+      profileData.specialization = form.specialization;
+      profileData.license_number = form.license_number;
+      profileData.years_experience = parseInt(form.years_experience) || 0;
+    } else {
+      profileData.date_of_birth = form.date_of_birth || null;
+      profileData.gender = form.gender;
+    }
+    const {
+      error: profErr
+    } = await sb.from('profiles').insert(profileData);
+    setLoading(false);
+    if (profErr) {
+      setErr('Account created, but profile setup failed: ' + profErr.message);
+      return;
+    }
+    setDone(true);
+  }
+  if (done) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "auth-shell"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "auth-art"
+    }, /*#__PURE__*/React.createElement(ToothMark, null), /*#__PURE__*/React.createElement("div", {
+      className: "brandmark"
+    }, /*#__PURE__*/React.createElement(BrandMark, {
+      settings: settings
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "name"
+    }, settings.clinic_name)), /*#__PURE__*/React.createElement("h1", null, "You're almost in."), /*#__PURE__*/React.createElement("p", {
+      className: "sub"
+    }, "Our team reviews every new account to keep the clinic's records accurate and secure.")), /*#__PURE__*/React.createElement("div", {
+      className: "auth-panel"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "center-card",
+      style: {
+        margin: 0,
+        maxWidth: 360,
+        boxShadow: 'none'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "ic"
+    }, "🕒"), /*#__PURE__*/React.createElement("h2", {
+      style: {
+        fontSize: 19,
+        marginBottom: 8
+      }
+    }, "Application submitted"), /*#__PURE__*/React.createElement("p", {
+      style: {
+        fontSize: 13,
+        color: 'var(--muted)',
+        marginBottom: 22
+      }
+    }, "Your account is waiting for admin approval. You'll be able to log in as soon as it's approved — this usually takes less than a day."), /*#__PURE__*/React.createElement("button", {
+      className: "btn btn-primary btn-block",
+      onClick: goLogin
+    }, "Back to Login"))));
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "auth-shell"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "auth-art"
+  }, /*#__PURE__*/React.createElement(ToothMark, null), /*#__PURE__*/React.createElement("div", {
+    className: "brandmark"
+  }, /*#__PURE__*/React.createElement(BrandMark, {
+    settings: settings
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "name"
+  }, settings.clinic_name)), /*#__PURE__*/React.createElement("h1", null, role === 'doctor' ? 'Join the clinic as a doctor.' : 'Create your patient account.'), /*#__PURE__*/React.createElement("p", {
+    className: "sub"
+  }, role === 'doctor' ? "Manage your own schedule, patients, and prescriptions once the clinic admin approves your profile." : "Book appointments, track your dental chart, and view prescriptions — all in one place.")), /*#__PURE__*/React.createElement("div", {
+    className: "auth-panel"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "auth-card",
+    style: {
+      maxWidth: 380
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "eyebrow"
+  }, "Create account"), /*#__PURE__*/React.createElement("h2", null, "Sign up"), /*#__PURE__*/React.createElement("p", {
+    className: "sub"
+  }, "Choose your account type to get started"), /*#__PURE__*/React.createElement("div", {
+    className: "role-toggle"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: role === 'patient' ? 'active' : '',
+    onClick: () => setRole('patient')
+  }, "🧑 Patient"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: role === 'doctor' ? 'active' : '',
+    onClick: () => setRole('doctor')
+  }, "🩺 Doctor")), err && /*#__PURE__*/React.createElement("div", {
+    className: "error-box"
+  }, err), role === 'doctor' && /*#__PURE__*/React.createElement("div", {
+    className: "info-box"
+  }, "Your account will be reviewed by the clinic admin before you can log in."), /*#__PURE__*/React.createElement("form", {
+    onSubmit: handleSignup
+  }, /*#__PURE__*/React.createElement("label", null, "Full Name"), /*#__PURE__*/React.createElement("input", {
+    value: form.full_name,
+    onChange: e => update('full_name', e.target.value),
+    placeholder: role === 'doctor' ? 'Dr. Ahmed Khan' : 'Sara Malik',
+    required: true
+  }), /*#__PURE__*/React.createElement("label", null, "Email"), /*#__PURE__*/React.createElement("input", {
+    type: "email",
+    value: form.email,
+    onChange: e => update('email', e.target.value),
+    placeholder: "you@email.com",
+    required: true
+  }), /*#__PURE__*/React.createElement("label", null, "Password"), /*#__PURE__*/React.createElement("input", {
+    type: "password",
+    value: form.password,
+    onChange: e => update('password', e.target.value),
+    placeholder: "At least 6 characters",
+    required: true
+  }), /*#__PURE__*/React.createElement("label", null, "Phone"), /*#__PURE__*/React.createElement("input", {
+    value: form.phone,
+    onChange: e => update('phone', e.target.value),
+    placeholder: "+971 5xx xxx xxx"
+  }), role === 'doctor' ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("label", null, "Specialization"), /*#__PURE__*/React.createElement("select", {
+    value: form.specialization,
+    onChange: e => update('specialization', e.target.value)
+  }, /*#__PURE__*/React.createElement("option", {
+    value: ""
+  }, "Select specialization"), /*#__PURE__*/React.createElement("option", null, "General Dentist"), /*#__PURE__*/React.createElement("option", null, "Orthodontist"), /*#__PURE__*/React.createElement("option", null, "Endodontist"), /*#__PURE__*/React.createElement("option", null, "Periodontist"), /*#__PURE__*/React.createElement("option", null, "Oral Surgeon"), /*#__PURE__*/React.createElement("option", null, "Pediatric Dentist")), /*#__PURE__*/React.createElement("label", null, "License Number"), /*#__PURE__*/React.createElement("input", {
+    value: form.license_number,
+    onChange: e => update('license_number', e.target.value),
+    placeholder: "DHA-xxxxx"
+  }), /*#__PURE__*/React.createElement("label", null, "Years of Experience"), /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    value: form.years_experience,
+    onChange: e => update('years_experience', e.target.value),
+    placeholder: "5"
+  })) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("label", null, "Date of Birth"), /*#__PURE__*/React.createElement("input", {
+    type: "date",
+    value: form.date_of_birth,
+    onChange: e => update('date_of_birth', e.target.value)
+  }), /*#__PURE__*/React.createElement("label", null, "Gender"), /*#__PURE__*/React.createElement("select", {
+    value: form.gender,
+    onChange: e => update('gender', e.target.value)
+  }, /*#__PURE__*/React.createElement("option", {
+    value: "male"
+  }, "Male"), /*#__PURE__*/React.createElement("option", {
+    value: "female"
+  }, "Female"), /*#__PURE__*/React.createElement("option", {
+    value: "other"
+  }, "Other"))), /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-primary btn-block",
+    disabled: loading,
+    type: "submit",
+    style: {
+      marginTop: 6
+    }
+  }, loading ? /*#__PURE__*/React.createElement("span", {
+    className: "spinner"
+  }) : 'Create Account')), /*#__PURE__*/React.createElement("p", {
+    style: {
+      textAlign: 'center',
+      fontSize: 12.5,
+      color: 'var(--muted)',
+      marginTop: 16
+    }
+  }, "Already have an account? ", /*#__PURE__*/React.createElement("a", {
+    href: "#",
+    onClick: e => {
+      e.preventDefault();
+      goLogin();
+    },
+    style: {
+      fontWeight: 600
+    }
+  }, "Log in")))));
+}
+
+// ============================================
+// PENDING / REJECTED / SUSPENDED STATUS SCREEN
+// ============================================
+function StatusScreen({
+  status,
+  logout
+}) {
+  const config = {
+    pending: {
+      ic: '🕒',
+      title: 'Your account is pending approval',
+      body: "The clinic admin hasn't approved your account yet. Please check back soon, or contact the clinic directly if this is taking longer than expected."
+    },
+    rejected: {
+      ic: '⛔',
+      title: 'Application not approved',
+      body: 'Unfortunately your account application was not approved. Please contact the clinic for more information.'
+    },
+    suspended: {
+      ic: '⚠️',
+      title: 'Account suspended',
+      body: 'Your account has been suspended by the clinic admin. Please contact the clinic for assistance.'
+    }
+  }[status] || {
+    ic: '❓',
+    title: 'Account status unknown',
+    body: 'Please contact the clinic admin.'
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      minHeight: '100vh',
+      background: 'var(--paper)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "center-card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ic"
+  }, config.ic), /*#__PURE__*/React.createElement("h2", {
+    style: {
+      fontSize: 19,
+      marginBottom: 10
+    }
+  }, config.title), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 13.5,
+      color: 'var(--muted)',
+      lineHeight: 1.6,
+      marginBottom: 22
+    }
+  }, config.body), /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-outline btn-block",
+    onClick: logout
+  }, "Log Out")));
+}
+
+// ============================================
+// ROOT APP
+// ============================================
+function AppRoot() {
+  const {
+    session,
+    profile,
+    profileLoading,
+    logout
+  } = useAuth();
+  const [authView, setAuthView] = useState('login');
+  if (session === undefined) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "loading-screen"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "dot-spin"
+    }), /*#__PURE__*/React.createElement("div", null, "Loading..."));
+  }
+  if (!session) {
+    return authView === 'login' ? /*#__PURE__*/React.createElement(LoginScreen, {
+      goSignup: () => setAuthView('signup')
+    }) : /*#__PURE__*/React.createElement(SignupScreen, {
+      goLogin: () => setAuthView('login')
+    });
+  }
+  if (profileLoading || profile === null) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "loading-screen"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "dot-spin"
+    }), /*#__PURE__*/React.createElement("div", null, "Loading your account..."));
+  }
+  if (profile.status !== 'approved') {
+    return /*#__PURE__*/React.createElement(StatusScreen, {
+      status: profile.status,
+      logout: logout
+    });
+  }
+
+  // Approved — route by role
+  if (profile.role === 'admin') return /*#__PURE__*/React.createElement(AdminApp, null);
+  if (profile.role === 'doctor') return /*#__PURE__*/React.createElement(DoctorApp, null);
+  return /*#__PURE__*/React.createElement(PatientApp, null);
+}
+
+// ============================================
+// ADMIN APP
+// ============================================
+function AdminLayout({
+  active,
+  children,
+  profile,
+  logout,
+  settings
+}) {
+  const nav = [{
+    id: 'pending',
+    label: 'Pending Approvals',
+    ic: '🕒'
+  }, {
+    id: 'doctors',
+    label: 'Doctors',
+    ic: '🩺'
+  }, {
+    id: 'patients',
+    label: 'Patients',
+    ic: '🧑'
+  }, {
+    id: 'addaccount',
+    label: 'Add Doctor/Patient',
+    ic: '➕'
+  }, {
+    id: 'settings',
+    label: 'Clinic Settings',
+    ic: '⚙️'
+  }];
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      minHeight: '100vh',
+      display: 'flex',
+      background: 'var(--paper)'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 230,
+      background: 'var(--navy)',
+      color: '#fff',
+      flexShrink: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      padding: '22px 14px'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      padding: '0 8px 20px',
+      marginBottom: 10,
+      borderBottom: '1px solid rgba(255,255,255,0.1)'
+    }
+  }, /*#__PURE__*/React.createElement(BrandMark, {
+    settings: settings,
+    size: 32
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Fraunces',serif",
+      fontSize: 16,
+      fontWeight: 600
+    }
+  }, settings.clinic_name)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      letterSpacing: '0.08em',
+      textTransform: 'uppercase',
+      color: 'rgba(255,255,255,0.4)',
+      margin: '10px 10px 6px'
+    }
+  }, "Admin Console"), nav.map(item => /*#__PURE__*/React.createElement("div", {
+    key: item.id,
+    onClick: () => window.__adminNav(item.id),
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      padding: '9px 12px',
+      borderRadius: 8,
+      fontSize: 13.5,
+      fontWeight: 500,
+      cursor: 'pointer',
+      marginBottom: 2,
+      background: active === item.id ? 'var(--teal)' : 'transparent',
+      color: active === item.id ? '#fff' : 'rgba(255,255,255,0.75)'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 18,
+      textAlign: 'center'
+    }
+  }, item.ic), item.label)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 'auto',
+      paddingTop: 14,
+      borderTop: '1px solid rgba(255,255,255,0.1)'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11.5,
+      color: 'rgba(255,255,255,0.5)',
+      padding: '8px 12px',
+      cursor: 'pointer'
+    },
+    onClick: logout
+  }, "↩ Log out"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0,
+      padding: '32px 36px',
+      overflowY: 'auto'
+    }
+  }, children));
+}
+function AdminApp() {
+  const {
+    profile,
+    logout
+  } = useAuth();
+  const settings = useClinicSettings();
+  const toast = useToast();
+  const [tab, setTab] = useState('pending');
+  const [pending, setPending] = useState([]);
+  const [doctors, setDoctors] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  window.__adminNav = setTab;
+  async function loadAll() {
+    setLoading(true);
+    const {
+      data: pendingData
+    } = await sb.from('profiles').select('*').eq('status', 'pending').order('created_at', {
+      ascending: false
+    });
+    const {
+      data: doctorData
+    } = await sb.from('profiles').select('*').eq('role', 'doctor').order('created_at', {
+      ascending: false
+    });
+    const {
+      data: patientData
+    } = await sb.from('profiles').select('*').eq('role', 'patient').order('created_at', {
+      ascending: false
+    });
+    setPending(pendingData || []);
+    setDoctors(doctorData || []);
+    setPatients(patientData || []);
+    setLoading(false);
+  }
+  useEffect(() => {
+    loadAll();
+  }, []);
+  async function approve(id) {
+    const {
+      error
+    } = await sb.from('profiles').update({
+      status: 'approved'
+    }).eq('id', id);
+    if (error) {
+      toast('Failed: ' + error.message, 'error');
+      return;
+    }
+    toast('Account approved');
+    loadAll();
+  }
+  async function reject(id) {
+    const {
+      error
+    } = await sb.from('profiles').update({
+      status: 'rejected'
+    }).eq('id', id);
+    if (error) {
+      toast('Failed: ' + error.message, 'error');
+      return;
+    }
+    toast('Account rejected');
+    loadAll();
+  }
+  async function suspend(id) {
+    const {
+      error
+    } = await sb.from('profiles').update({
+      status: 'suspended'
+    }).eq('id', id);
+    if (error) {
+      toast('Failed: ' + error.message, 'error');
+      return;
+    }
+    toast('Account suspended');
+    loadAll();
+  }
+  async function reactivate(id) {
+    const {
+      error
+    } = await sb.from('profiles').update({
+      status: 'approved'
+    }).eq('id', id);
+    if (error) {
+      toast('Failed: ' + error.message, 'error');
+      return;
+    }
+    toast('Account reactivated');
+    loadAll();
+  }
+  async function removeAccount(id) {
+    if (!window.confirm('Permanently remove this account? This cannot be undone.')) return;
+    const {
+      error
+    } = await sb.from('profiles').delete().eq('id', id);
+    if (error) {
+      toast('Failed: ' + error.message, 'error');
+      return;
+    }
+    toast('Account removed');
+    loadAll();
+  }
+  return /*#__PURE__*/React.createElement(AdminLayout, {
+    active: tab,
+    profile: profile,
+    logout: logout,
+    settings: settings
+  }, tab === 'pending' && /*#__PURE__*/React.createElement(PendingTab, {
+    pending: pending,
+    loading: loading,
+    approve: approve,
+    reject: reject
+  }), tab === 'doctors' && /*#__PURE__*/React.createElement(AccountsTab, {
+    title: "Doctors",
+    accounts: doctors,
+    loading: loading,
+    suspend: suspend,
+    reactivate: reactivate,
+    removeAccount: removeAccount,
+    roleLabel: "doctor"
+  }), tab === 'patients' && /*#__PURE__*/React.createElement(AccountsTab, {
+    title: "Patients",
+    accounts: patients,
+    loading: loading,
+    suspend: suspend,
+    reactivate: reactivate,
+    removeAccount: removeAccount,
+    roleLabel: "patient"
+  }), tab === 'addaccount' && /*#__PURE__*/React.createElement(AddAccountTab, {
+    toast: toast,
+    onCreated: loadAll
+  }), tab === 'settings' && /*#__PURE__*/React.createElement(ClinicSettingsTab, {
+    settings: settings,
+    toast: toast
+  }));
+}
+function PendingTab({
+  pending,
+  loading,
+  approve,
+  reject
+}) {
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "eyebrow"
+  }, "Admin"), /*#__PURE__*/React.createElement("h1", null, "Pending Approvals"), /*#__PURE__*/React.createElement("p", {
+    className: "sub",
+    style: {
+      marginBottom: 24
+    }
+  }, "Review new doctor and patient signups before they can log in."), loading && /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: 'var(--muted)'
+    }
+  }, "Loading..."), !loading && pending.length === 0 && /*#__PURE__*/React.createElement("div", {
+    className: "center-card",
+    style: {
+      margin: 0,
+      maxWidth: 480
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ic"
+  }, "✅"), /*#__PURE__*/React.createElement("h3", {
+    style: {
+      fontSize: 16
+    }
+  }, "All caught up"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: 'var(--muted)',
+      fontSize: 13
+    }
+  }, "No pending accounts waiting for approval.")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'grid',
+      gap: 14,
+      maxWidth: 720
+    }
+  }, pending.map(p => /*#__PURE__*/React.createElement("div", {
+    key: p.id,
+    style: {
+      background: '#fff',
+      border: '1px solid var(--line)',
+      borderRadius: 12,
+      padding: 18
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start'
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      fontSize: 15
+    }
+  }, p.full_name, " ", /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 11,
+      fontWeight: 600,
+      color: 'var(--teal)',
+      background: 'var(--teal-light)',
+      padding: '2px 8px',
+      borderRadius: 6,
+      marginLeft: 6
+    }
+  }, p.role)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: 'var(--muted)',
+      marginTop: 3
+    }
+  }, p.email, " ", p.phone ? '· ' + p.phone : ''), p.role === 'doctor' && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: 'var(--muted)',
+      marginTop: 6
+    }
+  }, p.specialization || '—', " · License: ", p.license_number || '—', " · ", p.years_experience || 0, " yrs experience"), p.role === 'patient' && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: 'var(--muted)',
+      marginTop: 6
+    }
+  }, p.date_of_birth ? 'DOB: ' + p.date_of_birth : '', " ", p.gender ? '· ' + p.gender : '')), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      flexShrink: 0
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-primary btn-sm",
+    onClick: () => approve(p.id)
+  }, "Approve"), /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-danger btn-sm",
+    onClick: () => reject(p.id)
+  }, "Reject")))))));
+}
+function AccountsTab({
+  title,
+  accounts,
+  loading,
+  suspend,
+  reactivate,
+  removeAccount,
+  roleLabel
+}) {
+  const [search, setSearch] = useState('');
+  const filtered = accounts.filter(a => a.full_name?.toLowerCase().includes(search.toLowerCase()) || a.email?.toLowerCase().includes(search.toLowerCase()));
+  function statusBadge(status) {
+    const colors = {
+      approved: {
+        bg: '#e7f6ec',
+        color: '#1e8e4e'
+      },
+      pending: {
+        bg: '#fdeee0',
+        color: 'var(--coral)'
+      },
+      rejected: {
+        bg: 'var(--red-light)',
+        color: 'var(--red)'
+      },
+      suspended: {
+        bg: 'var(--red-light)',
+        color: 'var(--red)'
+      }
+    };
+    const c = colors[status] || colors.pending;
+    return /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 10.5,
+        fontWeight: 700,
+        padding: '3px 9px',
+        borderRadius: 6,
+        background: c.bg,
+        color: c.color
+      }
+    }, status);
+  }
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "eyebrow"
+  }, "Admin"), /*#__PURE__*/React.createElement("h1", null, title), /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    placeholder: `Search ${title.toLowerCase()}...`,
+    value: search,
+    onChange: e => setSearch(e.target.value),
+    style: {
+      maxWidth: 320,
+      marginTop: 18
+    }
+  }), loading && /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: 'var(--muted)'
+    }
+  }, "Loading..."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: '#fff',
+      border: '1px solid var(--line)',
+      borderRadius: 12,
+      overflow: 'hidden',
+      marginTop: 14
+    }
+  }, /*#__PURE__*/React.createElement("table", {
+    style: {
+      width: '100%',
+      borderCollapse: 'collapse'
+    }
+  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
+    style: {
+      background: 'var(--paper)'
+    }
+  }, /*#__PURE__*/React.createElement("th", {
+    style: {
+      textAlign: 'left',
+      padding: '11px 16px',
+      fontSize: 11,
+      color: 'var(--muted)',
+      textTransform: 'uppercase'
+    }
+  }, "Name"), /*#__PURE__*/React.createElement("th", {
+    style: {
+      textAlign: 'left',
+      padding: '11px 16px',
+      fontSize: 11,
+      color: 'var(--muted)',
+      textTransform: 'uppercase'
+    }
+  }, "Email"), roleLabel === 'doctor' && /*#__PURE__*/React.createElement("th", {
+    style: {
+      textAlign: 'left',
+      padding: '11px 16px',
+      fontSize: 11,
+      color: 'var(--muted)',
+      textTransform: 'uppercase'
+    }
+  }, "Specialization"), /*#__PURE__*/React.createElement("th", {
+    style: {
+      textAlign: 'left',
+      padding: '11px 16px',
+      fontSize: 11,
+      color: 'var(--muted)',
+      textTransform: 'uppercase'
+    }
+  }, "Status"), /*#__PURE__*/React.createElement("th", {
+    style: {
+      textAlign: 'right',
+      padding: '11px 16px',
+      fontSize: 11,
+      color: 'var(--muted)',
+      textTransform: 'uppercase'
+    }
+  }, "Actions"))), /*#__PURE__*/React.createElement("tbody", null, filtered.map(a => /*#__PURE__*/React.createElement("tr", {
+    key: a.id,
+    style: {
+      borderTop: '1px solid var(--line)'
+    }
+  }, /*#__PURE__*/React.createElement("td", {
+    style: {
+      padding: '12px 16px',
+      fontSize: 13,
+      fontWeight: 600
+    }
+  }, a.full_name), /*#__PURE__*/React.createElement("td", {
+    style: {
+      padding: '12px 16px',
+      fontSize: 13,
+      color: 'var(--muted)'
+    }
+  }, a.email), roleLabel === 'doctor' && /*#__PURE__*/React.createElement("td", {
+    style: {
+      padding: '12px 16px',
+      fontSize: 13,
+      color: 'var(--muted)'
+    }
+  }, a.specialization || '—'), /*#__PURE__*/React.createElement("td", {
+    style: {
+      padding: '12px 16px'
+    }
+  }, statusBadge(a.status)), /*#__PURE__*/React.createElement("td", {
+    style: {
+      padding: '12px 16px',
+      textAlign: 'right'
+    }
+  }, a.status === 'approved' && /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-outline btn-sm",
+    onClick: () => suspend(a.id),
+    style: {
+      marginRight: 6
+    }
+  }, "Suspend"), (a.status === 'suspended' || a.status === 'rejected') && /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-outline btn-sm",
+    onClick: () => reactivate(a.id),
+    style: {
+      marginRight: 6
+    }
+  }, "Reactivate"), /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-danger btn-sm",
+    onClick: () => removeAccount(a.id)
+  }, "Remove")))), filtered.length === 0 && /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
+    colSpan: roleLabel === 'doctor' ? 5 : 4,
+    style: {
+      padding: 24,
+      textAlign: 'center',
+      color: 'var(--muted)',
+      fontSize: 13
+    }
+  }, "No ", title.toLowerCase(), " found."))))));
+}
+function AddAccountTab({
+  toast,
+  onCreated
+}) {
+  const [role, setRole] = useState('patient');
+  const [form, setForm] = useState({
+    full_name: '',
+    email: '',
+    password: '',
+    phone: '',
+    specialization: '',
+    license_number: '',
+    years_experience: ''
+  });
+  const [loading, setLoading] = useState(false);
+  function update(field, value) {
+    setForm(f => ({
+      ...f,
+      [field]: value
+    }));
+  }
+  async function handleCreate(e) {
+    e.preventDefault();
+    if (form.password.length < 6) {
+      toast('Password must be at least 6 characters.', 'error');
+      return;
+    }
+    setLoading(true);
+    const {
+      data,
+      error
+    } = await sb.auth.signUp({
+      email: form.email,
+      password: form.password
+    });
+    if (error) {
+      setLoading(false);
+      toast(error.message, 'error');
+      return;
+    }
+    const userId = data.user?.id;
+    if (!userId) {
+      setLoading(false);
+      toast('Could not create account.', 'error');
+      return;
+    }
+    const profileData = {
+      id: userId,
+      email: form.email,
+      full_name: form.full_name,
+      role: role,
+      status: 'approved',
+      phone: form.phone
+    };
+    if (role === 'doctor') {
+      profileData.specialization = form.specialization;
+      profileData.license_number = form.license_number;
+      profileData.years_experience = parseInt(form.years_experience) || 0;
+    }
+    const {
+      error: profErr
+    } = await sb.from('profiles').insert(profileData);
+    setLoading(false);
+    if (profErr) {
+      toast('Account created, but needs manual approval from Pending tab: ' + profErr.message, 'error');
+    } else {
+      toast(`${role === 'doctor' ? 'Doctor' : 'Patient'} account created and approved`);
+      setForm({
+        full_name: '',
+        email: '',
+        password: '',
+        phone: '',
+        specialization: '',
+        license_number: '',
+        years_experience: ''
+      });
+      onCreated();
+    }
+  }
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "eyebrow"
+  }, "Admin"), /*#__PURE__*/React.createElement("h1", null, "Add Doctor / Patient"), /*#__PURE__*/React.createElement("p", {
+    className: "sub",
+    style: {
+      marginBottom: 22
+    }
+  }, "Create an account directly — it will be approved automatically."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: '#fff',
+      border: '1px solid var(--line)',
+      borderRadius: 12,
+      padding: 24,
+      maxWidth: 440
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "role-toggle"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: role === 'patient' ? 'active' : '',
+    onClick: () => setRole('patient')
+  }, "🧑 Patient"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: role === 'doctor' ? 'active' : '',
+    onClick: () => setRole('doctor')
+  }, "🩺 Doctor")), /*#__PURE__*/React.createElement("form", {
+    onSubmit: handleCreate
+  }, /*#__PURE__*/React.createElement("label", null, "Full Name"), /*#__PURE__*/React.createElement("input", {
+    value: form.full_name,
+    onChange: e => update('full_name', e.target.value),
+    required: true
+  }), /*#__PURE__*/React.createElement("label", null, "Email"), /*#__PURE__*/React.createElement("input", {
+    type: "email",
+    value: form.email,
+    onChange: e => update('email', e.target.value),
+    required: true
+  }), /*#__PURE__*/React.createElement("label", null, "Temporary Password"), /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    value: form.password,
+    onChange: e => update('password', e.target.value),
+    placeholder: "At least 6 characters",
+    required: true
+  }), /*#__PURE__*/React.createElement("label", null, "Phone"), /*#__PURE__*/React.createElement("input", {
+    value: form.phone,
+    onChange: e => update('phone', e.target.value),
+    placeholder: "+971 5xx xxx xxx"
+  }), role === 'doctor' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("label", null, "Specialization"), /*#__PURE__*/React.createElement("input", {
+    value: form.specialization,
+    onChange: e => update('specialization', e.target.value),
+    placeholder: "e.g. Orthodontist"
+  }), /*#__PURE__*/React.createElement("label", null, "License Number"), /*#__PURE__*/React.createElement("input", {
+    value: form.license_number,
+    onChange: e => update('license_number', e.target.value),
+    placeholder: "DHA-xxxxx"
+  }), /*#__PURE__*/React.createElement("label", null, "Years of Experience"), /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    value: form.years_experience,
+    onChange: e => update('years_experience', e.target.value)
+  })), /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-primary btn-block",
+    disabled: loading,
+    type: "submit",
+    style: {
+      marginTop: 6
+    }
+  }, loading ? /*#__PURE__*/React.createElement("span", {
+    className: "spinner"
+  }) : `Create ${role === 'doctor' ? 'Doctor' : 'Patient'} Account`))));
+}
+function ClinicSettingsTab({
+  settings,
+  toast
+}) {
+  const [name, setName] = useState(settings.clinic_name || '');
+  const [phone, setPhone] = useState(settings.phone || '');
+  const [address, setAddress] = useState(settings.address || '');
+  const [logoPreview, setLogoPreview] = useState(settings.logo_url || null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
+  useEffect(() => {
+    setName(settings.clinic_name || '');
+    setPhone(settings.phone || '');
+    setAddress(settings.address || '');
+    setLogoPreview(settings.logo_url || null);
+  }, [settings.clinic_name, settings.phone, settings.address, settings.logo_url]);
+  async function handleLogoUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    const ext = file.name.split('.').pop();
+    const path = `clinic-logo-${Date.now()}.${ext}`;
+    const {
+      error: upErr
+    } = await sb.storage.from('public-assets').upload(path, file, {
+      upsert: true
+    });
+    if (upErr) {
+      setUploading(false);
+      toast('Upload failed: ' + upErr.message, 'error');
+      return;
+    }
+    const {
+      data: urlData
+    } = sb.storage.from('public-assets').getPublicUrl(path);
+    const logoUrl = urlData.publicUrl;
+    const {
+      error: updateErr
+    } = await sb.from('clinic_settings').update({
+      logo_url: logoUrl
+    }).eq('id', 1);
+    setUploading(false);
+    if (updateErr) {
+      toast('Saved logo, but failed to update settings: ' + updateErr.message, 'error');
+      return;
+    }
+    setLogoPreview(logoUrl);
+    toast('Logo updated — it will now show for everyone');
+  }
+  async function handleSaveDetails(e) {
+    e.preventDefault();
+    const {
+      error
+    } = await sb.from('clinic_settings').update({
+      clinic_name: name,
+      phone,
+      address
+    }).eq('id', 1);
+    if (error) {
+      toast('Failed: ' + error.message, 'error');
+      return;
+    }
+    toast('Clinic details saved');
+  }
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "eyebrow"
+  }, "Admin"), /*#__PURE__*/React.createElement("h1", null, "Clinic Settings"), /*#__PURE__*/React.createElement("p", {
+    className: "sub",
+    style: {
+      marginBottom: 22
+    }
+  }, "This logo and name appear for every doctor and patient."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: '#fff',
+      border: '1px solid var(--line)',
+      borderRadius: 12,
+      padding: 24,
+      maxWidth: 440,
+      marginBottom: 20
+    }
+  }, /*#__PURE__*/React.createElement("h3", {
+    style: {
+      fontSize: 14.5,
+      marginBottom: 14
+    }
+  }, "Clinic Logo"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 16,
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 64,
+      height: 64,
+      borderRadius: 14,
+      background: 'var(--teal-light)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'hidden'
+    }
+  }, logoPreview ? /*#__PURE__*/React.createElement("img", {
+    src: logoPreview,
+    style: {
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover'
+    }
+  }) : /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 24,
+      color: 'var(--teal)'
+    }
+  }, name ? name[0] : 'D')), /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-outline btn-sm",
+    onClick: () => fileInputRef.current.click(),
+    disabled: uploading
+  }, uploading ? 'Uploading...' : 'Upload New Logo'), /*#__PURE__*/React.createElement("input", {
+    ref: fileInputRef,
+    type: "file",
+    accept: "image/*",
+    style: {
+      display: 'none'
+    },
+    onChange: handleLogoUpload
+  })), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 11.5,
+      color: 'var(--muted)'
+    }
+  }, "PNG or JPG, square image recommended.")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: '#fff',
+      border: '1px solid var(--line)',
+      borderRadius: 12,
+      padding: 24,
+      maxWidth: 440
+    }
+  }, /*#__PURE__*/React.createElement("h3", {
+    style: {
+      fontSize: 14.5,
+      marginBottom: 14
+    }
+  }, "Clinic Details"), /*#__PURE__*/React.createElement("form", {
+    onSubmit: handleSaveDetails
+  }, /*#__PURE__*/React.createElement("label", null, "Clinic Name"), /*#__PURE__*/React.createElement("input", {
+    value: name,
+    onChange: e => setName(e.target.value)
+  }), /*#__PURE__*/React.createElement("label", null, "Phone"), /*#__PURE__*/React.createElement("input", {
+    value: phone,
+    onChange: e => setPhone(e.target.value),
+    placeholder: "+971 4 xxx xxxx"
+  }), /*#__PURE__*/React.createElement("label", null, "Address"), /*#__PURE__*/React.createElement("textarea", {
+    rows: 2,
+    value: address,
+    onChange: e => setAddress(e.target.value)
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-primary",
+    type: "submit"
+  }, "Save Details"))));
+}
+
+function DoctorApp() {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: 40
+    }
+  }, /*#__PURE__*/React.createElement("h2", null, "Doctor Dashboard — coming in next step"));
+}
+function PatientApp() {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: 40
+    }
+  }, /*#__PURE__*/React.createElement("h2", null, "Patient Dashboard — coming in next step"));
+}
+function Main() {
+  return /*#__PURE__*/React.createElement(AuthProvider, null, /*#__PURE__*/React.createElement(ToastProvider, null, /*#__PURE__*/React.createElement(AppRoot, null)));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(Main, null));
+</script>
+</body>
+</html>

@@ -1507,14 +1507,16 @@ function AdminApp() {
     appointments: appointments,
     patients: patients,
     doctors: doctors,
-    toast: toast
+    toast: toast,
+    profile: profile
   }), tab === 'permissions' && /*#__PURE__*/React.createElement(PermissionsTab, {
     doctors: doctors,
     loading: loading,
     toast: toast
   }), tab === 'support' && /*#__PURE__*/React.createElement(SupportTab, {
     settings: settings,
-    toast: toast
+    toast: toast,
+    profile: profile
   }), tab === 'comingsoon' && /*#__PURE__*/React.createElement(ComingSoonTab, null)), showBooking && /*#__PURE__*/React.createElement(BookingModal, {
     doctors: doctors.filter(d => d.status === 'approved'),
     patients: patients.filter(p => p.status === 'approved'),
@@ -2726,38 +2728,213 @@ function NotificationsTab({
   appointments,
   patients,
   doctors,
-  toast
+  toast,
+  profile
 }) {
   const alerts = buildAlerts(pending, appointments, patients, doctors);
+  const [announcements, setAnnouncements] = useState([]);
+  const [loadingAnn, setLoadingAnn] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [title, setTitle] = useState('');
+  const [message, setMessage] = useState('');
+  const [audience, setAudience] = useState('all');
+  const [validUntil, setValidUntil] = useState('');
+  const [saving, setSaving] = useState(false);
+  async function loadAnnouncements() {
+    setLoadingAnn(true);
+    const {
+      data
+    } = await sb.from('announcements').select('*').order('created_at', {
+      ascending: false
+    });
+    setAnnouncements(data || []);
+    setLoadingAnn(false);
+  }
+  useEffect(() => {
+    loadAnnouncements();
+  }, []);
+  async function handleCreate(e) {
+    e.preventDefault();
+    setSaving(true);
+    const {
+      error
+    } = await sb.from('announcements').insert({
+      title,
+      message,
+      audience,
+      valid_until: validUntil || null,
+      created_by: profile?.id
+    });
+    setSaving(false);
+    if (error) {
+      toast('Failed: ' + error.message, 'error');
+      return;
+    }
+    toast('Announcement published');
+    setTitle('');
+    setMessage('');
+    setAudience('all');
+    setValidUntil('');
+    setShowForm(false);
+    loadAnnouncements();
+  }
+  async function removeAnnouncement(id) {
+    if (!window.confirm('Remove this announcement?')) return;
+    const {
+      error
+    } = await sb.from('announcements').delete().eq('id', id);
+    if (error) {
+      toast('Failed: ' + error.message, 'error');
+      return;
+    }
+    toast('Announcement removed');
+    loadAnnouncements();
+  }
+  const today = new Date().toISOString().slice(0, 10);
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "a-page-header"
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     className: "a-page-title"
-  }, "Notifications"), /*#__PURE__*/React.createElement("div", {
+  }, "Notifications & Announcements"), /*#__PURE__*/React.createElement("div", {
     className: "a-page-sub"
-  }, "Recent clinic activity and reminders."))), /*#__PURE__*/React.createElement("div", {
+  }, "Recent clinic activity, and announcements visible to doctors and patients.")), /*#__PURE__*/React.createElement("button", {
+    className: "a-btn-primary",
+    onClick: () => setShowForm(s => !s)
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fa-solid fa-bullhorn"
+  }), " New Announcement")), showForm && /*#__PURE__*/React.createElement("div", {
     className: "a-panel",
     style: {
-      maxWidth: 480,
-      marginBottom: 6
+      maxWidth: 520
     }
   }, /*#__PURE__*/React.createElement("div", {
     className: "a-panel-title",
     style: {
-      marginBottom: 12
-    }
-  }, "Send a Reminder"), /*#__PURE__*/React.createElement("p", {
-    style: {
-      fontSize: 12.5,
-      color: 'var(--surf-muted)',
       marginBottom: 14
     }
-  }, "This is a placeholder — connecting real SMS/email reminders requires a messaging provider."), /*#__PURE__*/React.createElement("button", {
-    className: "a-btn-outline",
-    onClick: () => toast('Reminder sending will be available once SMS/email is connected')
-  }, /*#__PURE__*/React.createElement("i", {
-    className: "fa-solid fa-paper-plane"
-  }), " Send Test Reminder")), /*#__PURE__*/React.createElement("div", {
+  }, "Create Announcement"), /*#__PURE__*/React.createElement("form", {
+    onSubmit: handleCreate
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "a-label"
+  }, "Title"), /*#__PURE__*/React.createElement("input", {
+    className: "a-input",
+    value: title,
+    onChange: e => setTitle(e.target.value),
+    placeholder: "e.g. Clinic closed for Eid holidays",
+    required: true
+  }), /*#__PURE__*/React.createElement("label", {
+    className: "a-label"
+  }, "Message"), /*#__PURE__*/React.createElement("textarea", {
+    className: "a-input",
+    rows: 3,
+    value: message,
+    onChange: e => setMessage(e.target.value),
+    placeholder: "Full announcement details...",
+    required: true
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "a-label"
+  }, "Visible to"), /*#__PURE__*/React.createElement("select", {
+    className: "a-input",
+    value: audience,
+    onChange: e => setAudience(e.target.value)
+  }, /*#__PURE__*/React.createElement("option", {
+    value: "all"
+  }, "Everyone"), /*#__PURE__*/React.createElement("option", {
+    value: "doctors"
+  }, "Doctors only"), /*#__PURE__*/React.createElement("option", {
+    value: "patients"
+  }, "Patients only"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "a-label"
+  }, "Valid until"), /*#__PURE__*/React.createElement("input", {
+    type: "date",
+    className: "a-input",
+    value: validUntil,
+    onChange: e => setValidUntil(e.target.value),
+    min: today
+  }))), /*#__PURE__*/React.createElement("button", {
+    className: "a-btn-primary",
+    type: "submit",
+    disabled: saving
+  }, saving ? 'Publishing...' : 'Publish Announcement'))), /*#__PURE__*/React.createElement("div", {
+    className: "a-panel"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "a-panel-header"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "a-panel-title"
+  }, "Active Announcements")), loadingAnn && /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 13,
+      color: 'var(--surf-muted)'
+    }
+  }, "Loading..."), !loadingAnn && announcements.length === 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'center',
+      padding: '24px 10px',
+      color: 'var(--surf-muted)'
+    }
+  }, "No announcements yet."), announcements.map(a => {
+    const isExpired = a.valid_until && a.valid_until < today;
+    return /*#__PURE__*/React.createElement("div", {
+      key: a.id,
+      style: {
+        padding: '12px 0',
+        borderBottom: '1px solid var(--surf-border)'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        gap: 10
+      }
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 13.5,
+        fontWeight: 700
+      }
+    }, a.title, " ", isExpired && /*#__PURE__*/React.createElement("span", {
+      className: "a-pill pill-red",
+      style: {
+        marginLeft: 6
+      }
+    }, "Expired")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12.5,
+        color: 'var(--surf-muted)',
+        marginTop: 3
+      }
+    }, a.message), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: 'var(--surf-light)',
+        marginTop: 5
+      }
+    }, "Audience: ", /*#__PURE__*/React.createElement("strong", {
+      style: {
+        textTransform: 'capitalize'
+      }
+    }, a.audience), a.valid_until && /*#__PURE__*/React.createElement(React.Fragment, null, " · Valid until ", new Date(a.valid_until).toLocaleDateString('en-GB')))), /*#__PURE__*/React.createElement("span", {
+      className: "a-action-text danger",
+      onClick: () => removeAnnouncement(a.id),
+      style: {
+        marginLeft: 0,
+        flexShrink: 0
+      }
+    }, "Remove")));
+  })), /*#__PURE__*/React.createElement("div", {
     className: "a-panel"
   }, /*#__PURE__*/React.createElement("div", {
     className: "a-panel-header"
@@ -2880,42 +3057,307 @@ function PermissionsTab({
 // ============================================
 function SupportTab({
   settings,
-  toast
+  toast,
+  profile
 }) {
+  const [category, setCategory] = useState('general');
+  const [priority, setPriority] = useState('normal');
+  const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
+  const [file, setFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [tickets, setTickets] = useState([]);
+  const [loadingTickets, setLoadingTickets] = useState(true);
+  const fileInputRef = useRef(null);
+  async function loadTickets() {
+    setLoadingTickets(true);
+    const {
+      data
+    } = await sb.from('support_tickets').select('*').order('created_at', {
+      ascending: false
+    });
+    setTickets(data || []);
+    setLoadingTickets(false);
+  }
+  useEffect(() => {
+    loadTickets();
+  }, []);
+  function handleFileChange(e) {
+    const f = e.target.files[0];
+    if (!f) return;
+    setFile(f);
+    setFilePreview(f.type.startsWith('image/') ? URL.createObjectURL(f) : null);
+  }
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setUploading(true);
+    let attachmentUrl = null;
+    if (file) {
+      const ext = file.name.split('.').pop();
+      const path = `support-${Date.now()}.${ext}`;
+      const {
+        error: upErr
+      } = await sb.storage.from('public-assets').upload(path, file);
+      if (upErr) {
+        setUploading(false);
+        toast('File upload failed: ' + upErr.message, 'error');
+        return;
+      }
+      const {
+        data: urlData
+      } = sb.storage.from('public-assets').getPublicUrl(path);
+      attachmentUrl = urlData.publicUrl;
+    }
+    const {
+      error
+    } = await sb.from('support_tickets').insert({
+      created_by: profile?.id,
+      category,
+      priority,
+      subject,
+      message,
+      attachment_url: attachmentUrl
+    });
+    setUploading(false);
+    if (error) {
+      toast('Failed: ' + error.message, 'error');
+      return;
+    }
+    toast('Support ticket submitted — we will get back to you soon');
+    setSubject('');
+    setMessage('');
+    setFile(null);
+    setFilePreview(null);
+    setCategory('general');
+    setPriority('normal');
+    loadTickets();
+  }
+  const categoryLabels = {
+    general: 'General Inquiry',
+    complaint: 'Complaint',
+    technical: 'Technical Issue',
+    billing: 'Billing Issue',
+    appointment: 'Appointment Issue'
+  };
+  const statusLabels = {
+    open: {
+      cls: 'pill-amber',
+      label: 'Open'
+    },
+    in_progress: {
+      cls: 'pill-blue',
+      label: 'In Progress'
+    },
+    resolved: {
+      cls: 'pill-green',
+      label: 'Resolved'
+    },
+    closed: {
+      cls: 'pill-gray',
+      label: 'Closed'
+    }
+  };
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "a-page-header"
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     className: "a-page-title"
   }, "Support"), /*#__PURE__*/React.createElement("div", {
     className: "a-page-sub"
-  }, "Need help with ", settings.clinic_name, "'s software?"))), /*#__PURE__*/React.createElement("div", {
+  }, "Need help with ", settings.clinic_name, "'s software? Submit a ticket below."))), /*#__PURE__*/React.createElement("div", {
     className: "a-panel",
     style: {
-      maxWidth: 480
+      maxWidth: 520
     }
   }, /*#__PURE__*/React.createElement("div", {
     className: "a-panel-title",
     style: {
       marginBottom: 14
     }
-  }, "Contact Support"), /*#__PURE__*/React.createElement("label", {
+  }, "Submit a Ticket"), /*#__PURE__*/React.createElement("form", {
+    onSubmit: handleSubmit
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("label", {
     className: "a-label"
-  }, "How can we help?"), /*#__PURE__*/React.createElement("textarea", {
+  }, "Category"), /*#__PURE__*/React.createElement("select", {
+    className: "a-input",
+    value: category,
+    onChange: e => setCategory(e.target.value)
+  }, /*#__PURE__*/React.createElement("option", {
+    value: "general"
+  }, "General Inquiry"), /*#__PURE__*/React.createElement("option", {
+    value: "complaint"
+  }, "Complaint"), /*#__PURE__*/React.createElement("option", {
+    value: "technical"
+  }, "Technical Issue"), /*#__PURE__*/React.createElement("option", {
+    value: "billing"
+  }, "Billing Issue"), /*#__PURE__*/React.createElement("option", {
+    value: "appointment"
+  }, "Appointment Issue"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "a-label"
+  }, "Priority"), /*#__PURE__*/React.createElement("select", {
+    className: "a-input",
+    value: priority,
+    onChange: e => setPriority(e.target.value)
+  }, /*#__PURE__*/React.createElement("option", {
+    value: "low"
+  }, "Low"), /*#__PURE__*/React.createElement("option", {
+    value: "normal"
+  }, "Normal"), /*#__PURE__*/React.createElement("option", {
+    value: "high"
+  }, "High"), /*#__PURE__*/React.createElement("option", {
+    value: "urgent"
+  }, "Urgent")))), /*#__PURE__*/React.createElement("label", {
+    className: "a-label"
+  }, "Subject"), /*#__PURE__*/React.createElement("input", {
+    className: "a-input",
+    value: subject,
+    onChange: e => setSubject(e.target.value),
+    placeholder: "Brief summary of the issue",
+    required: true
+  }), /*#__PURE__*/React.createElement("label", {
+    className: "a-label"
+  }, "Message"), /*#__PURE__*/React.createElement("textarea", {
     className: "a-input",
     rows: 4,
     value: message,
     onChange: e => setMessage(e.target.value),
-    placeholder: "Describe the issue..."
-  }), /*#__PURE__*/React.createElement("button", {
-    className: "a-btn-primary",
-    onClick: () => {
-      toast('Message sent — we will get back to you soon');
-      setMessage('');
+    placeholder: "Describe the issue in detail...",
+    required: true
+  }), /*#__PURE__*/React.createElement("label", {
+    className: "a-label"
+  }, "Attachment (optional)"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 12,
+      marginBottom: 14
+    }
+  }, filePreview && /*#__PURE__*/React.createElement("img", {
+    src: filePreview,
+    style: {
+      width: 48,
+      height: 48,
+      borderRadius: 8,
+      objectFit: 'cover'
+    }
+  }), file && !filePreview && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: 'var(--surf-muted)'
     }
   }, /*#__PURE__*/React.createElement("i", {
+    className: "fa-solid fa-paperclip"
+  }), " ", file.name), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "a-btn-outline",
+    onClick: () => fileInputRef.current.click()
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fa-solid fa-paperclip"
+  }), " ", file ? 'Change File' : 'Attach Screenshot / File'), /*#__PURE__*/React.createElement("input", {
+    ref: fileInputRef,
+    type: "file",
+    accept: "image/*,.pdf",
+    style: {
+      display: 'none'
+    },
+    onChange: handleFileChange
+  })), /*#__PURE__*/React.createElement("button", {
+    className: "a-btn-primary",
+    type: "submit",
+    disabled: uploading
+  }, uploading ? 'Submitting...' : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("i", {
     className: "fa-solid fa-headset"
-  }), " Send Message")));
+  }), " Submit Ticket")))), /*#__PURE__*/React.createElement("div", {
+    className: "a-panel"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "a-panel-header"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "a-panel-title"
+  }, "My Tickets")), loadingTickets && /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 13,
+      color: 'var(--surf-muted)'
+    }
+  }, "Loading..."), !loadingTickets && tickets.length === 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'center',
+      padding: '24px 10px',
+      color: 'var(--surf-muted)'
+    }
+  }, "No tickets submitted yet."), tickets.map(t => {
+    const sl = statusLabels[t.status] || statusLabels.open;
+    return /*#__PURE__*/React.createElement("div", {
+      key: t.id,
+      style: {
+        padding: '12px 0',
+        borderBottom: '1px solid var(--surf-border)'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        gap: 10
+      }
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 13.5,
+        fontWeight: 700
+      }
+    }, t.subject), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11.5,
+        color: 'var(--surf-muted)',
+        marginTop: 2
+      }
+    }, categoryLabels[t.category], " · ", new Date(t.created_at).toLocaleDateString('en-GB')), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12.5,
+        color: 'var(--surf-muted)',
+        marginTop: 6
+      }
+    }, t.message), t.attachment_url && /*#__PURE__*/React.createElement("a", {
+      href: t.attachment_url,
+      target: "_blank",
+      rel: "noopener",
+      style: {
+        fontSize: 11.5,
+        color: 'var(--purple)',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 5,
+        marginTop: 6
+      }
+    }, /*#__PURE__*/React.createElement("i", {
+      className: "fa-solid fa-paperclip"
+    }), " View attachment"), t.admin_reply && /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: 'var(--surf-bg)',
+        borderRadius: 8,
+        padding: '8px 12px',
+        marginTop: 8,
+        fontSize: 12
+      }
+    }, /*#__PURE__*/React.createElement("strong", null, "Support reply:"), " ", t.admin_reply)), /*#__PURE__*/React.createElement("span", {
+      className: 'a-pill ' + sl.cls,
+      style: {
+        flexShrink: 0
+      }
+    }, sl.label)));
+  })));
 }
 
 // ============================================

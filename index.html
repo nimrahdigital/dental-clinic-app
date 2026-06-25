@@ -1319,6 +1319,7 @@ function AdminApp() {
   const [loading, setLoading] = useState(true);
   const [showBooking, setShowBooking] = useState(false);
   const [confirmedAppt, setConfirmedAppt] = useState(null);
+  const [viewingAppt, setViewingAppt] = useState(null);
   async function loadAll() {
     setLoading(true);
     const {
@@ -1455,7 +1456,8 @@ function AdminApp() {
     loading: loading,
     approve: approve,
     reject: reject,
-    goTab: goTab
+    goTab: goTab,
+    onViewAppt: setViewingAppt
   }), tab === 'appointments' && /*#__PURE__*/React.createElement(PendingTab, {
     pending: pending,
     loading: loading,
@@ -1537,6 +1539,13 @@ function AdminApp() {
       setConfirmedAppt(null);
       setShowBooking(true);
     }
+  }), viewingAppt && /*#__PURE__*/React.createElement(ConfirmationReceipt, {
+    appt: viewingAppt,
+    doctor: profileById[viewingAppt.doctor_id],
+    patient: profileById[viewingAppt.patient_id],
+    settings: settings,
+    onClose: () => setViewingAppt(null),
+    onBookAnother: null
   }));
 }
 function ComingSoonTab() {
@@ -2775,7 +2784,8 @@ function OverviewTab({
   loading,
   approve,
   reject,
-  goTab
+  goTab,
+  onViewAppt
 }) {
   const approvedDoctors = doctors.filter(d => d.status === 'approved');
   const approvedPatients = patients.filter(p => p.status === 'approved');
@@ -2893,12 +2903,14 @@ function OverviewTab({
       status: a.status
     })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("span", {
       className: "a-action-icon",
-      title: "View"
+      title: "View",
+      onClick: () => onViewAppt(a)
     }, /*#__PURE__*/React.createElement("i", {
       className: "fa-regular fa-eye"
     })), /*#__PURE__*/React.createElement("span", {
       className: "a-action-icon",
-      title: "Edit"
+      title: "View / Edit",
+      onClick: () => onViewAppt(a)
     }, /*#__PURE__*/React.createElement("i", {
       className: "fa-regular fa-pen-to-square"
     }))));
@@ -4410,17 +4422,46 @@ function ConfirmationReceipt({
     month: 'long',
     year: 'numeric'
   });
-  const shareLink = (settings.website || 'https://yourclinic.app') + '/apt/' + appt.id;
+  const createdLabel = appt.created_at ? new Date(appt.created_at).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  }) : '';
+  const shareLink = window.location.origin + window.location.pathname + '?apt=' + appt.id;
   function handlePrint() {
     const printContents = printRef.current.innerHTML;
     const win = window.open('', '_blank');
     win.document.write(`
-      <html><head><title>Appointment Receipt</title>
+      <html><head><title>Appointment Receipt — ${appt.id.slice(0, 8).toUpperCase()}</title>
       <style>
-        body{font-family:Arial,sans-serif;color:#1A2233;padding:40px;max-width:500px;margin:0 auto;}
-        .r-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #E2E8F0;font-size:13px;}
-        .r-head{background:#185FA5;color:#fff;padding:10px 16px;border-radius:8px 8px 0 0;font-size:12px;font-weight:700;display:flex;justify-content:space-between;}
-        .r-body{border:1px solid #E2E8F0;border-radius:0 0 8px 8px;padding:16px;}
+        @page { margin: 0; }
+        body{font-family:Arial,Helvetica,sans-serif;color:#1A2233;padding:50px 46px;max-width:760px;margin:0 auto;}
+        .ap-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+        .ap-clinic-row{display:flex;align-items:center;gap:10px;}
+        .ap-logo{width:46px;height:46px;border-radius:8px;object-fit:cover;}
+        .ap-clinic{font-size:18px;font-weight:800;letter-spacing:.02em;}
+        .ap-clinic-sub{font-size:11px;color:#64748B;letter-spacing:.06em;text-transform:uppercase;margin-top:1px;}
+        .ap-title{font-size:30px;font-weight:800;color:#185FA5;letter-spacing:.04em;text-align:right;}
+        .ap-rule{height:2px;background:#94A3B8;margin:14px 0 28px;}
+        .ap-meta-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:26px;}
+        .ap-label{font-size:11px;text-transform:uppercase;color:#64748B;margin-bottom:3px;letter-spacing:.04em;}
+        .ap-val{font-size:14px;color:#1A2233;}
+        .ap-val.bold{font-weight:700;font-size:15px;}
+        .ap-no-date{text-align:right;font-size:13px;}
+        .ap-no-date .num{font-weight:700;}
+        .ap-status-badge{display:inline-block;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.03em;margin-top:6px;}
+        .ap-section-title{background:#185FA5;color:#fff;font-size:11.5px;font-weight:700;padding:9px 14px;text-transform:uppercase;letter-spacing:.03em;border-radius:5px 5px 0 0;margin-top:10px;}
+        .ap-detail-table{width:100%;border-collapse:collapse;}
+        .ap-detail-table td{padding:11px 14px;border-bottom:1px solid #E2E8F0;font-size:13.5px;}
+        .ap-detail-table tr:nth-child(even){background:#EAF2FA;}
+        .ap-detail-table td.k{color:#64748B;width:40%;}
+        .ap-detail-table td.v{font-weight:600;text-align:right;}
+        .ap-doc-card{display:flex;align-items:center;gap:12px;border:1px solid #E2E8F0;border-radius:8px;padding:14px 16px;margin-top:14px;}
+        .ap-doc-avatar{width:44px;height:44px;border-radius:50%;background:#E6F1FB;color:#185FA5;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;}
+        .ap-footer-rule{height:2px;background:#94A3B8;margin:34px 0 14px;}
+        .ap-footer{display:flex; justify-content:space-between; font-size:11.5px; color:#475569; flex-wrap:wrap; gap:10px;}
+        .ap-footer span{display:inline-flex; align-items:center; gap:6px;}
+        .ap-note{margin-top:24px;font-size:11.5px;color:#94A3B8;text-align:center;}
       </style>
       </head><body>${printContents}</body></html>
     `);
@@ -4431,6 +4472,25 @@ function ConfirmationReceipt({
   function copyLink() {
     navigator.clipboard.writeText(shareLink);
   }
+  const statusColors = {
+    confirmed: {
+      bg: '#E1F5EE',
+      color: '#0F6E56'
+    },
+    completed: {
+      bg: '#EDE9FE',
+      color: '#5B21B6'
+    },
+    cancelled: {
+      bg: '#FEE2E2',
+      color: '#A32D2D'
+    },
+    pending: {
+      bg: '#FAEEDA',
+      color: '#633806'
+    }
+  };
+  const sc = statusColors[appt.status] || statusColors.pending;
   return /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'fixed',
@@ -4447,7 +4507,7 @@ function ConfirmationReceipt({
     style: {
       background: 'var(--surf-card)',
       borderRadius: 14,
-      maxWidth: 480,
+      maxWidth: 620,
       width: '100%',
       maxHeight: '92vh',
       overflowY: 'auto',
@@ -4476,7 +4536,7 @@ function ConfirmationReceipt({
       fontWeight: 700,
       marginBottom: 6
     }
-  }, "Appointment confirmed!"), /*#__PURE__*/React.createElement("div", {
+  }, onBookAnother ? 'Appointment confirmed!' : 'Appointment Details'), /*#__PURE__*/React.createElement("div", {
     style: {
       textAlign: 'center',
       fontSize: 12.5,
@@ -4484,47 +4544,139 @@ function ConfirmationReceipt({
       marginBottom: 20
     }
   }, "The appointment has been booked successfully."), /*#__PURE__*/React.createElement("div", {
-    ref: printRef
-  }, /*#__PURE__*/React.createElement("div", {
+    ref: printRef,
     style: {
+      background: '#fff',
+      border: '1px solid var(--surf-border)',
+      borderRadius: 10,
+      padding: '26px 28px'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ap-head",
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: 6
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ap-clinic-row",
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10
+    }
+  }, settings.logo_url ? /*#__PURE__*/React.createElement("img", {
+    src: settings.logo_url,
+    style: {
+      width: 40,
+      height: 40,
+      borderRadius: 8,
+      objectFit: 'cover'
+    }
+  }) : /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 40,
+      height: 40,
+      borderRadius: 8,
       background: 'var(--admin-blue)',
       color: '#fff',
-      padding: '10px 16px',
-      borderRadius: '10px 10px 0 0',
-      fontSize: 12,
-      fontWeight: 700,
       display: 'flex',
-      justifyContent: 'space-between'
-    }
-  }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("i", {
-    className: "fa-solid fa-receipt"
-  }), " Appointment receipt"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      opacity: 0.8,
-      fontWeight: 500
-    }
-  }, "Ref: #", appt.id.slice(0, 8).toUpperCase())), /*#__PURE__*/React.createElement("div", {
-    style: {
-      border: '1px solid var(--surf-border)',
-      borderTop: 'none',
-      borderRadius: '0 0 10px 10px',
-      padding: '16px 18px'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: 10,
       alignItems: 'center',
-      marginBottom: 14,
-      paddingBottom: 14,
-      borderBottom: '1px solid var(--surf-border)'
+      justifyContent: 'center',
+      fontWeight: 700
+    }
+  }, settings.clinic_name?.[0] || 'D'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 16,
+      fontWeight: 800
+    }
+  }, settings.clinic_name), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10.5,
+      color: 'var(--surf-muted)',
+      textTransform: 'uppercase',
+      letterSpacing: '.06em'
+    }
+  }, "Dental Clinic"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 26,
+      fontWeight: 800,
+      color: 'var(--admin-blue)',
+      letterSpacing: '.03em'
+    }
+  }, "APPOINTMENT")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 2,
+      background: '#94A3B8',
+      margin: '12px 0 22px'
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      marginBottom: 20
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10.5,
+      textTransform: 'uppercase',
+      color: 'var(--surf-muted)',
+      letterSpacing: '.04em',
+      marginBottom: 3
+    }
+  }, "Patient"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 14,
+      fontWeight: 700
+    }
+  }, patient?.full_name || 'Unknown patient'), patient?.phone && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: 'var(--surf-muted)',
+      marginTop: 4
+    }
+  }, patient.phone), patient?.email && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: 'var(--surf-muted)'
+    }
+  }, patient.email)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'right',
+      fontSize: 13
+    }
+  }, /*#__PURE__*/React.createElement("div", null, "Ref : ", /*#__PURE__*/React.createElement("strong", null, "#", appt.id.slice(0, 8).toUpperCase())), createdLabel && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 4
+    }
+  }, "Booked on ", createdLabel), /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: 'inline-block',
+      padding: '4px 13px',
+      borderRadius: 20,
+      fontSize: 11,
+      fontWeight: 700,
+      marginTop: 6,
+      background: sc.bg,
+      color: sc.color
+    }
+  }, appt.status?.toUpperCase()))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 12,
+      border: '1px solid var(--surf-border)',
+      borderRadius: 8,
+      padding: '12px 14px',
+      marginBottom: 14
     }
   }, /*#__PURE__*/React.createElement(Avatar, {
     name: doctor?.full_name,
-    size: 36
+    size: 40
   }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 13,
+      fontSize: 13.5,
       fontWeight: 700
     }
   }, doctor?.full_name), /*#__PURE__*/React.createElement("div", {
@@ -4532,13 +4684,32 @@ function ConfirmationReceipt({
       fontSize: 11,
       color: 'var(--surf-muted)'
     }
-  }, doctor?.specialization || 'General Dentist'))), [['Date', dateLabel], ['Time', appt.appointment_time + ' (' + appt.duration_minutes + ' min)'], ['Visit type', appt.consultation_type === 'teledentistry' ? 'Teledentistry' : 'In-clinic'], ['Patient', patient?.full_name], ['Reason', appt.reason], ['Consultation fee', appt.is_free ? 'AED 0 (Free)' : 'AED ' + Number(appt.consultation_fee).toLocaleString()]].map(([k, v]) => /*#__PURE__*/React.createElement("div", {
+  }, doctor?.specialization || 'General Dentist'))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: 'var(--admin-blue)',
+      color: '#fff',
+      fontSize: 11,
+      fontWeight: 700,
+      padding: '8px 14px',
+      textTransform: 'uppercase',
+      letterSpacing: '.03em',
+      borderRadius: '5px 5px 0 0'
+    }
+  }, "Appointment Details"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      border: '1px solid var(--surf-border)',
+      borderTop: 'none',
+      borderRadius: '0 0 5px 5px'
+    }
+  }, [['Date', dateLabel], ['Time', appt.appointment_time + ' (' + appt.duration_minutes + ' min)'], ['Visit type', appt.consultation_type === 'teledentistry' ? 'Teledentistry' : 'In-clinic'], ['Reason', appt.reason], ['Consultation fee', appt.is_free ? 'AED 0 (Free)' : 'AED ' + Number(appt.consultation_fee).toLocaleString()]].map(([k, v], i) => /*#__PURE__*/React.createElement("div", {
     key: k,
     style: {
       display: 'flex',
       justifyContent: 'space-between',
-      padding: '7px 0',
-      fontSize: 13
+      padding: '9px 14px',
+      fontSize: 13,
+      background: i % 2 === 1 ? 'var(--surf-bg)' : 'transparent',
+      borderBottom: k !== 'Consultation fee' ? '1px solid var(--surf-border)' : 'none'
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
@@ -4602,7 +4773,7 @@ function ConfirmationReceipt({
     onClick: onClose
   }, /*#__PURE__*/React.createElement("i", {
     className: "fa-solid fa-house"
-  }), " Close"), /*#__PURE__*/React.createElement("button", {
+  }), " Close"), onBookAnother && /*#__PURE__*/React.createElement("button", {
     className: "a-btn-primary",
     style: {
       gridColumn: '1/-1',
@@ -4628,7 +4799,284 @@ function PatientApp() {
     }
   }, /*#__PURE__*/React.createElement("h2", null, "Patient Dashboard — coming in next step"));
 }
+// ============================================
+// PUBLIC APPOINTMENT VIEW — no login required, accessed via shareable link
+// ============================================
+function PublicAppointmentView({
+  appointmentId
+}) {
+  const [appt, setAppt] = useState(undefined);
+  const [settings, setSettings] = useState({
+    clinic_name: 'DentalCare',
+    logo_url: null
+  });
+  const printRef = useRef(null);
+  useEffect(() => {
+    async function load() {
+      const {
+        data: settingsData
+      } = await sb.from('clinic_settings').select('*').eq('id', 1).single();
+      if (settingsData) setSettings(settingsData);
+      const {
+        data,
+        error
+      } = await sb.rpc('get_shared_appointment', {
+        appt_id: appointmentId
+      });
+      if (error || !data || data.length === 0) {
+        setAppt(null);
+        return;
+      }
+      setAppt(data[0]);
+    }
+    load();
+  }, [appointmentId]);
+  function handlePrint() {
+    const printContents = printRef.current.innerHTML;
+    const win = window.open('', '_blank');
+    win.document.write(`
+      <html><head><title>Appointment Receipt — ${appt.id.slice(0, 8).toUpperCase()}</title>
+      <style>
+        @page { margin: 0; }
+        body{font-family:Arial,Helvetica,sans-serif;color:#1A2233;padding:50px 46px;max-width:760px;margin:0 auto;}
+        .ap-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+        .ap-clinic-row{display:flex;align-items:center;gap:10px;}
+        .ap-logo{width:46px;height:46px;border-radius:8px;object-fit:cover;}
+        .ap-clinic{font-size:18px;font-weight:800;letter-spacing:.02em;}
+        .ap-clinic-sub{font-size:11px;color:#64748B;letter-spacing:.06em;text-transform:uppercase;margin-top:1px;}
+        .ap-title{font-size:30px;font-weight:800;color:#185FA5;letter-spacing:.04em;text-align:right;}
+        .ap-rule{height:2px;background:#94A3B8;margin:14px 0 28px;}
+        .ap-meta-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:26px;}
+        .ap-label{font-size:11px;text-transform:uppercase;color:#64748B;margin-bottom:3px;letter-spacing:.04em;}
+        .ap-val{font-size:14px;color:#1A2233;}
+        .ap-val.bold{font-weight:700;font-size:15px;}
+        .ap-no-date{text-align:right;font-size:13px;}
+        .ap-no-date .num{font-weight:700;}
+        .ap-status-badge{display:inline-block;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.03em;margin-top:6px;}
+        .ap-section-title{background:#185FA5;color:#fff;font-size:11.5px;font-weight:700;padding:9px 14px;text-transform:uppercase;letter-spacing:.03em;border-radius:5px 5px 0 0;margin-top:10px;}
+        .ap-detail-table{width:100%;border-collapse:collapse;}
+        .ap-detail-table td{padding:11px 14px;border-bottom:1px solid #E2E8F0;font-size:13.5px;}
+        .ap-detail-table tr:nth-child(even){background:#EAF2FA;}
+        .ap-detail-table td.k{color:#64748B;width:40%;}
+        .ap-detail-table td.v{font-weight:600;text-align:right;}
+        .ap-doc-card{display:flex;align-items:center;gap:12px;border:1px solid #E2E8F0;border-radius:8px;padding:14px 16px;margin-top:14px;}
+        .ap-doc-avatar{width:44px;height:44px;border-radius:50%;background:#E6F1FB;color:#185FA5;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;}
+        .ap-footer-rule{height:2px;background:#94A3B8;margin:34px 0 14px;}
+        .ap-footer{display:flex; justify-content:space-between; font-size:11.5px; color:#475569; flex-wrap:wrap; gap:10px;}
+        .ap-footer span{display:inline-flex; align-items:center; gap:6px;}
+        .ap-note{margin-top:24px;font-size:11.5px;color:#94A3B8;text-align:center;}
+      </style>
+      </head><body>${printContents}</body></html>
+    `);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 300);
+  }
+  if (appt === undefined) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "loading-screen"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "dot-spin"
+    }), /*#__PURE__*/React.createElement("div", null, "Loading appointment..."));
+  }
+  if (appt === null) {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'var(--paper)'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "center-card"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "ic"
+    }, "❓"), /*#__PURE__*/React.createElement("h2", {
+      style: {
+        fontSize: 18
+      }
+    }, "Appointment not found"), /*#__PURE__*/React.createElement("p", {
+      style: {
+        color: 'var(--muted)',
+        fontSize: 13
+      }
+    }, "This link may be invalid or the appointment was removed.")));
+  }
+  const dateLabel = new Date(appt.appointment_date).toLocaleDateString('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+  const createdLabel = appt.created_at ? new Date(appt.created_at).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  }) : '';
+  const statusColors = {
+    confirmed: {
+      bg: '#E1F5EE',
+      color: '#0F6E56'
+    },
+    completed: {
+      bg: '#EDE9FE',
+      color: '#5B21B6'
+    },
+    cancelled: {
+      bg: '#FEE2E2',
+      color: '#A32D2D'
+    },
+    pending: {
+      bg: '#FAEEDA',
+      color: '#633806'
+    }
+  };
+  const sc = statusColors[appt.status] || statusColors.pending;
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      minHeight: '100vh',
+      background: 'var(--paper)',
+      padding: '40px 16px'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 640,
+      margin: '0 auto'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: '#fff',
+      borderRadius: 14,
+      overflow: 'hidden',
+      boxShadow: '0 1px 3px rgba(0,0,0,.07), 0 4px 16px rgba(0,0,0,.05)',
+      padding: '34px 36px'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    ref: printRef
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ap-head"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ap-clinic-row"
+  }, settings.logo_url ? /*#__PURE__*/React.createElement("img", {
+    src: settings.logo_url,
+    className: "ap-logo"
+  }) : /*#__PURE__*/React.createElement("div", {
+    className: "ap-logo",
+    style: {
+      background: '#185FA5',
+      color: '#fff',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontWeight: 700,
+      fontSize: 18
+    }
+  }, settings.clinic_name?.[0] || 'D'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "ap-clinic"
+  }, settings.clinic_name), /*#__PURE__*/React.createElement("div", {
+    className: "ap-clinic-sub"
+  }, "Dental Clinic"))), /*#__PURE__*/React.createElement("div", {
+    className: "ap-title"
+  }, "APPOINTMENT")), /*#__PURE__*/React.createElement("div", {
+    className: "ap-rule"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "ap-meta-row"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "ap-label"
+  }, "Patient"), /*#__PURE__*/React.createElement("div", {
+    className: "ap-val bold"
+  }, appt.patient_name || 'Unknown patient'), appt.patient_phone && /*#__PURE__*/React.createElement("div", {
+    className: "ap-val",
+    style: {
+      color: '#64748B',
+      marginTop: 4
+    }
+  }, appt.patient_phone), appt.patient_email && /*#__PURE__*/React.createElement("div", {
+    className: "ap-val",
+    style: {
+      color: '#64748B'
+    }
+  }, appt.patient_email)), /*#__PURE__*/React.createElement("div", {
+    className: "ap-no-date"
+  }, /*#__PURE__*/React.createElement("div", null, "Ref : ", /*#__PURE__*/React.createElement("span", {
+    className: "num"
+  }, "#", appt.id.slice(0, 8).toUpperCase())), createdLabel && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 4
+    }
+  }, "Booked on ", createdLabel), /*#__PURE__*/React.createElement("span", {
+    className: "ap-status-badge",
+    style: {
+      background: sc.bg,
+      color: sc.color
+    }
+  }, appt.status?.toUpperCase()))), /*#__PURE__*/React.createElement("div", {
+    className: "ap-doc-card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ap-doc-avatar"
+  }, appt.doctor_name?.split(' ').map(n => n[0]).slice(0, 2).join('') || 'DR'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      fontSize: 14
+    }
+  }, appt.doctor_name || 'Doctor'), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11.5,
+      color: '#64748B'
+    }
+  }, appt.doctor_specialization || 'General Dentist'))), /*#__PURE__*/React.createElement("div", {
+    className: "ap-section-title"
+  }, "Appointment Details"), /*#__PURE__*/React.createElement("table", {
+    className: "ap-detail-table"
+  }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
+    className: "k"
+  }, "Date"), /*#__PURE__*/React.createElement("td", {
+    className: "v"
+  }, dateLabel)), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
+    className: "k"
+  }, "Time"), /*#__PURE__*/React.createElement("td", {
+    className: "v"
+  }, appt.appointment_time, " (", appt.duration_minutes, " min)")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
+    className: "k"
+  }, "Visit type"), /*#__PURE__*/React.createElement("td", {
+    className: "v"
+  }, appt.consultation_type === 'teledentistry' ? 'Teledentistry' : 'In-clinic')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
+    className: "k"
+  }, "Reason"), /*#__PURE__*/React.createElement("td", {
+    className: "v"
+  }, appt.reason || '—')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
+    className: "k"
+  }, "Consultation fee"), /*#__PURE__*/React.createElement("td", {
+    className: "v"
+  }, appt.is_free ? 'AED 0 (Free)' : 'AED ' + Number(appt.consultation_fee).toLocaleString())))), /*#__PURE__*/React.createElement("div", {
+    className: "ap-footer-rule"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "ap-footer"
+  }, settings.phone && /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("i", {
+    className: "fa-solid fa-phone"
+  }), " ", settings.phone), settings.email && /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("i", {
+    className: "fa-regular fa-envelope"
+  }), " ", settings.email), settings.address && /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("i", {
+    className: "fa-solid fa-location-dot"
+  }), " ", settings.address)), /*#__PURE__*/React.createElement("div", {
+    className: "ap-note"
+  }, "This is a shared, read-only appointment confirmation. No login required to view."))), /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-primary btn-block",
+    style: {
+      marginTop: 18
+    },
+    onClick: handlePrint
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fa-solid fa-file-arrow-down"
+  }), " Print / Save as PDF")));
+}
+
 function Main() {
+  const apptId = new URLSearchParams(window.location.search).get('apt');
+  if (apptId) {
+    return /*#__PURE__*/React.createElement(PublicAppointmentView, { appointmentId: apptId });
+  }
   return /*#__PURE__*/React.createElement(AuthProvider, null, /*#__PURE__*/React.createElement(ToastProvider, null, /*#__PURE__*/React.createElement(AppRoot, null)));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(Main, null));

@@ -1545,7 +1545,9 @@ function AdminApp() {
     patient: profileById[viewingAppt.patient_id],
     settings: settings,
     onClose: () => setViewingAppt(null),
-    onBookAnother: null
+    onBookAnother: null,
+    toast: toast,
+    onUpdated: loadAll
   }));
 }
 function ComingSoonTab() {
@@ -1557,10 +1559,20 @@ function ComingSoonTab() {
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 34,
-      marginBottom: 10
+      width: 52,
+      height: 52,
+      borderRadius: '50%',
+      background: 'var(--purple-light)',
+      color: 'var(--purple)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: 20,
+      margin: '0 auto 10px'
     }
-  }, "🚧"), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fa-regular fa-hourglass-half"
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 15,
       fontWeight: 600,
@@ -2175,15 +2187,31 @@ function InvoiceModal({
       display: mode === 'view' ? 'block' : 'none'
     }
   }, /*#__PURE__*/React.createElement("div", {
-    className: "inv-head"
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: 6
+    }
   }, /*#__PURE__*/React.createElement("div", {
-    className: "inv-clinic-row"
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10
+    }
   }, settings.logo_url ? /*#__PURE__*/React.createElement("img", {
     src: settings.logo_url,
-    className: "inv-logo"
-  }) : /*#__PURE__*/React.createElement("div", {
-    className: "inv-logo",
     style: {
+      width: 46,
+      height: 46,
+      borderRadius: 8,
+      objectFit: 'cover'
+    }
+  }) : /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 46,
+      height: 46,
+      borderRadius: 8,
       background: '#185FA5',
       color: '#fff',
       display: 'flex',
@@ -2193,37 +2221,79 @@ function InvoiceModal({
       fontSize: 18
     }
   }, settings.clinic_name?.[0] || 'D'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "inv-clinic"
-  }, settings.clinic_name), /*#__PURE__*/React.createElement("div", {
-    className: "inv-clinic-sub"
-  }, "Dental Clinic"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "inv-title"
-  }, "INVOICE"), settings.website && /*#__PURE__*/React.createElement("div", {
-    className: "inv-website"
-  }, settings.website))), /*#__PURE__*/React.createElement("div", {
-    className: "inv-rule"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "inv-meta-row"
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "inv-label"
-  }, "Invoice to:"), /*#__PURE__*/React.createElement("div", {
-    className: "inv-val bold"
-  }, patient?.full_name || 'Unknown patient'), /*#__PURE__*/React.createElement("div", {
-    className: "inv-val",
     style: {
+      fontSize: 18,
+      fontWeight: 800,
+      letterSpacing: '.02em'
+    }
+  }, settings.clinic_name), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: '#64748B',
+      letterSpacing: '.06em',
+      textTransform: 'uppercase',
+      marginTop: 1
+    }
+  }, "Dental Clinic"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'right'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 30,
+      fontWeight: 800,
+      color: '#185FA5',
+      letterSpacing: '.04em'
+    }
+  }, "INVOICE"), settings.website && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: '#64748B',
+      marginTop: 2
+    }
+  }, settings.website))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 2,
+      background: '#94A3B8',
+      margin: '14px 0 28px'
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: 26
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      textTransform: 'uppercase',
+      color: '#64748B',
+      marginBottom: 3,
+      letterSpacing: '.04em'
+    }
+  }, "Invoice to:"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 15,
+      fontWeight: 700
+    }
+  }, patient?.full_name || 'Unknown patient'), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
       color: '#64748B',
       marginTop: 4
     }
   }, patient?.phone), /*#__PURE__*/React.createElement("div", {
-    className: "inv-val",
     style: {
+      fontSize: 13,
       color: '#64748B'
     }
   }, patient?.email)), /*#__PURE__*/React.createElement("div", {
-    className: "inv-no-date"
-  }, /*#__PURE__*/React.createElement("div", null, "Invoice no : ", /*#__PURE__*/React.createElement("span", {
-    className: "num"
-  }, invoice.invoice_number)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'right',
+      fontSize: 13
+    }
+  }, /*#__PURE__*/React.createElement("div", null, "Invoice no : ", /*#__PURE__*/React.createElement("strong", null, invoice.invoice_number)), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 4
     }
@@ -2232,66 +2302,218 @@ function InvoiceModal({
     month: 'long',
     year: 'numeric'
   })), /*#__PURE__*/React.createElement("span", {
-    className: "inv-status-badge",
     style: {
-      background: sc.bg,
-      color: sc.color,
+      display: 'inline-block',
+      padding: '4px 13px',
+      borderRadius: 20,
+      fontSize: 11,
+      fontWeight: 700,
       marginTop: 8,
-      display: 'inline-block'
+      background: sc.bg,
+      color: sc.color
     }
-  }, status.toUpperCase()))), /*#__PURE__*/React.createElement("table", null, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", {
-    className: "num-col"
-  }, "No"), /*#__PURE__*/React.createElement("th", null, "Description"), /*#__PURE__*/React.createElement("th", {
-    className: "right"
+  }, status.toUpperCase()))), /*#__PURE__*/React.createElement("table", {
+    style: {
+      width: '100%',
+      borderCollapse: 'collapse'
+    }
+  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", {
+    style: {
+      background: '#185FA5',
+      color: '#fff',
+      textAlign: 'center',
+      fontSize: 11.5,
+      fontWeight: 700,
+      padding: '10px 12px',
+      textTransform: 'uppercase',
+      letterSpacing: '.03em',
+      width: 36
+    }
+  }, "No"), /*#__PURE__*/React.createElement("th", {
+    style: {
+      background: '#185FA5',
+      color: '#fff',
+      textAlign: 'left',
+      fontSize: 11.5,
+      fontWeight: 700,
+      padding: '10px 12px',
+      textTransform: 'uppercase',
+      letterSpacing: '.03em'
+    }
+  }, "Description"), /*#__PURE__*/React.createElement("th", {
+    style: {
+      background: '#185FA5',
+      color: '#fff',
+      textAlign: 'right',
+      fontSize: 11.5,
+      fontWeight: 700,
+      padding: '10px 12px',
+      textTransform: 'uppercase',
+      letterSpacing: '.03em'
+    }
   }, "Amount (AED)"))), /*#__PURE__*/React.createElement("tbody", null, items.map((it, i) => /*#__PURE__*/React.createElement("tr", {
-    key: i
+    key: i,
+    style: {
+      background: i % 2 === 1 ? '#EAF2FA' : 'transparent'
+    }
   }, /*#__PURE__*/React.createElement("td", {
-    className: "num-col"
-  }, i + 1), /*#__PURE__*/React.createElement("td", null, it.description, doctor && i === 0 ? /*#__PURE__*/React.createElement("span", {
+    style: {
+      textAlign: 'center',
+      color: '#64748B',
+      padding: '10px 12px',
+      fontSize: 13.5,
+      borderBottom: '1px solid #E2E8F0'
+    }
+  }, i + 1), /*#__PURE__*/React.createElement("td", {
+    style: {
+      padding: '10px 12px',
+      fontSize: 13.5,
+      borderBottom: '1px solid #E2E8F0'
+    }
+  }, it.description, doctor && i === 0 ? /*#__PURE__*/React.createElement("span", {
     style: {
       color: '#94A3B8',
       fontSize: 11.5
     }
   }, " — Dr. ", doctor.full_name) : ''), /*#__PURE__*/React.createElement("td", {
-    className: "right"
+    style: {
+      textAlign: 'right',
+      padding: '10px 12px',
+      fontSize: 13.5,
+      borderBottom: '1px solid #E2E8F0'
+    }
   }, Number(it.amount).toLocaleString()))))), /*#__PURE__*/React.createElement("div", {
-    className: "inv-totals"
+    style: {
+      marginTop: 14,
+      marginLeft: 'auto',
+      width: 260
+    }
   }, /*#__PURE__*/React.createElement("div", {
-    className: "inv-totals-row"
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      fontSize: 13,
+      padding: '5px 0',
+      color: '#475569'
+    }
   }, /*#__PURE__*/React.createElement("span", null, "Sub Total :"), /*#__PURE__*/React.createElement("span", null, "AED ", subTotal.toLocaleString())), taxPct > 0 && /*#__PURE__*/React.createElement("div", {
-    className: "inv-totals-row"
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      fontSize: 13,
+      padding: '5px 0',
+      color: '#475569'
+    }
   }, /*#__PURE__*/React.createElement("span", null, "Tax ", taxPct, "% :"), /*#__PURE__*/React.createElement("span", null, "AED ", taxAmount.toLocaleString())), /*#__PURE__*/React.createElement("div", {
-    className: "inv-grand"
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      background: '#185FA5',
+      color: '#fff',
+      padding: '10px 14px',
+      borderRadius: 5,
+      marginTop: 8,
+      fontWeight: 800,
+      fontSize: 14.5
+    }
   }, /*#__PURE__*/React.createElement("span", null, "GRAND TOTAL :"), /*#__PURE__*/React.createElement("span", null, "AED ", grandTotal.toLocaleString()))), /*#__PURE__*/React.createElement("div", {
-    className: "inv-bottom-grid"
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 30,
+      marginTop: 36,
+      alignItems: 'start'
+    }
   }, /*#__PURE__*/React.createElement("div", null, (settings.bank_name || settings.bank_account) && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
-    className: "inv-payment-label"
+    style: {
+      display: 'inline-block',
+      background: '#185FA5',
+      color: '#fff',
+      fontSize: 11.5,
+      fontWeight: 700,
+      padding: '6px 14px',
+      borderRadius: 4,
+      marginBottom: 10,
+      letterSpacing: '.03em'
+    }
   }, "PAYMENT METHOD :"), settings.bank_name && /*#__PURE__*/React.createElement("div", {
-    className: "inv-bank-row"
+    style: {
+      fontSize: 13,
+      marginBottom: 4
+    }
   }, "Bank Name : ", settings.bank_name), settings.bank_account && /*#__PURE__*/React.createElement("div", {
-    className: "inv-bank-row"
+    style: {
+      fontSize: 13,
+      marginBottom: 4
+    }
   }, "Account Number : ", settings.bank_account)), /*#__PURE__*/React.createElement("div", {
-    className: "inv-thanks"
+    style: {
+      fontWeight: 700,
+      fontSize: 14,
+      margin: '18px 0 10px'
+    }
   }, "Thank you for choosing us!"), settings.terms_and_conditions && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    className: "inv-terms-title"
+    style: {
+      fontWeight: 700,
+      fontSize: 13,
+      marginBottom: 6
+    }
   }, "Terms and Conditions :"), /*#__PURE__*/React.createElement("div", {
-    className: "inv-terms-text"
+    style: {
+      fontSize: 11.5,
+      color: '#64748B',
+      lineHeight: 1.6
+    }
   }, settings.terms_and_conditions))), /*#__PURE__*/React.createElement("div", {
-    className: "inv-sig-block"
+    style: {
+      textAlign: 'right'
+    }
   }, settings.signature_url ? /*#__PURE__*/React.createElement("img", {
     src: settings.signature_url,
-    className: "inv-sig-img"
+    style: {
+      maxWidth: 140,
+      maxHeight: 50,
+      objectFit: 'contain',
+      marginBottom: 4
+    }
   }) : settings.signature_name ? /*#__PURE__*/React.createElement("div", {
-    className: "inv-sig-script"
+    style: {
+      fontFamily: "'Brush Script MT', cursive",
+      fontSize: 26,
+      marginBottom: 2
+    }
   }, settings.signature_name) : null, settings.signature_name && /*#__PURE__*/React.createElement("div", {
-    className: "inv-sig-name"
+    style: {
+      fontWeight: 700,
+      fontSize: 13
+    }
   }, settings.signature_name), settings.signature_title && /*#__PURE__*/React.createElement("div", {
-    className: "inv-sig-title"
+    style: {
+      fontSize: 11.5,
+      color: '#64748B'
+    }
   }, settings.signature_title))), /*#__PURE__*/React.createElement("div", {
-    className: "inv-footer-rule"
+    style: {
+      height: 2,
+      background: '#94A3B8',
+      margin: '34px 0 14px'
+    }
   }), /*#__PURE__*/React.createElement("div", {
-    className: "inv-footer"
-  }, settings.phone && /*#__PURE__*/React.createElement("span", null, "📞 ", settings.phone), settings.email && /*#__PURE__*/React.createElement("span", null, "✉️ ", settings.email), settings.address && /*#__PURE__*/React.createElement("span", null, "📍 ", settings.address))))));
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      fontSize: 11.5,
+      color: '#475569',
+      flexWrap: 'wrap',
+      gap: 10
+    }
+  }, settings.phone && /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("i", {
+    className: "fa-solid fa-phone"
+  }), " ", settings.phone), settings.email && /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("i", {
+    className: "fa-regular fa-envelope"
+  }), " ", settings.email), settings.address && /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("i", {
+    className: "fa-solid fa-location-dot"
+  }), " ", settings.address))))));
 }
 
 // ============================================
@@ -3126,10 +3348,20 @@ function PendingTab({
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 34,
-      marginBottom: 10
+      width: 52,
+      height: 52,
+      borderRadius: '50%',
+      background: 'var(--admin-green-light)',
+      color: 'var(--admin-green)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: 22,
+      margin: '0 auto 14px'
     }
-  }, "✅"), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fa-solid fa-check"
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 15,
       fontWeight: 600,
@@ -3505,7 +3737,9 @@ function ClinicSettingsTab({
   const [website, setWebsite] = useState(settings.website || '');
   const [address, setAddress] = useState(settings.address || '');
   const [bankName, setBankName] = useState(settings.bank_name || '');
+  const [accountTitle, setAccountTitle] = useState(settings.account_title || '');
   const [bankAccount, setBankAccount] = useState(settings.bank_account || '');
+  const [currency, setCurrency] = useState(settings.currency || 'AED');
   const [terms, setTerms] = useState(settings.terms_and_conditions || '');
   const [taxPercent, setTaxPercent] = useState(settings.tax_percent ?? 0);
   const [signatureName, setSignatureName] = useState(settings.signature_name || '');
@@ -3523,7 +3757,9 @@ function ClinicSettingsTab({
     setWebsite(settings.website || '');
     setAddress(settings.address || '');
     setBankName(settings.bank_name || '');
+    setAccountTitle(settings.account_title || '');
     setBankAccount(settings.bank_account || '');
+    setCurrency(settings.currency || 'AED');
     setTerms(settings.terms_and_conditions || '');
     setTaxPercent(settings.tax_percent ?? 0);
     setSignatureName(settings.signature_name || '');
@@ -3621,7 +3857,9 @@ function ClinicSettingsTab({
       website,
       address,
       bank_name: bankName,
+      account_title: accountTitle,
       bank_account: bankAccount,
+      currency,
       terms_and_conditions: terms,
       tax_percent: Number(taxPercent) || 0,
       signature_name: signatureName,
@@ -3768,7 +4006,38 @@ function ClinicSettingsTab({
     style: {
       marginBottom: 14
     }
-  }, "Invoice Settings"), /*#__PURE__*/React.createElement("label", {
+  }, "Invoice Settings"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "a-label"
+  }, "Currency"), /*#__PURE__*/React.createElement("select", {
+    className: "a-input",
+    value: currency,
+    onChange: e => setCurrency(e.target.value)
+  }, /*#__PURE__*/React.createElement("option", {
+    value: "AED"
+  }, "AED — UAE Dirham"), /*#__PURE__*/React.createElement("option", {
+    value: "USD"
+  }, "USD — US Dollar"), /*#__PURE__*/React.createElement("option", {
+    value: "GBP"
+  }, "GBP — British Pound"), /*#__PURE__*/React.createElement("option", {
+    value: "PKR"
+  }, "PKR — Pakistani Rupee"), /*#__PURE__*/React.createElement("option", {
+    value: "SAR"
+  }, "SAR — Saudi Riyal"), /*#__PURE__*/React.createElement("option", {
+    value: "EUR"
+  }, "EUR — Euro"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("label", {
     className: "a-label"
   }, "Tax Percentage (%)"), /*#__PURE__*/React.createElement("input", {
     className: "a-input",
@@ -3776,13 +4045,20 @@ function ClinicSettingsTab({
     value: taxPercent,
     onChange: e => setTaxPercent(e.target.value),
     placeholder: "0"
-  }), /*#__PURE__*/React.createElement("label", {
+  }))), /*#__PURE__*/React.createElement("label", {
     className: "a-label"
   }, "Bank Name"), /*#__PURE__*/React.createElement("input", {
     className: "a-input",
     value: bankName,
     onChange: e => setBankName(e.target.value),
     placeholder: "e.g. Emirates NBD"
+  }), /*#__PURE__*/React.createElement("label", {
+    className: "a-label"
+  }, "Account Title (Holder Name)"), /*#__PURE__*/React.createElement("input", {
+    className: "a-input",
+    value: accountTitle,
+    onChange: e => setAccountTitle(e.target.value),
+    placeholder: "e.g. DentalCare Clinic LLC"
   }), /*#__PURE__*/React.createElement("label", {
     className: "a-label"
   }, "Bank Account Number / IBAN"), /*#__PURE__*/React.createElement("input", {
@@ -4413,9 +4689,20 @@ function ConfirmationReceipt({
   patient,
   settings,
   onClose,
-  onBookAnother
+  onBookAnother,
+  onUpdated,
+  toast
 }) {
   const printRef = useRef(null);
+  const [mode, setMode] = useState('view');
+  const [status, setStatus] = useState(appt.status);
+  const [reason, setReason] = useState(appt.reason || '');
+  const [apptDate, setApptDate] = useState(appt.appointment_date);
+  const [apptTime, setApptTime] = useState(appt.appointment_time);
+  const [duration, setDuration] = useState(appt.duration_minutes);
+  const [fee, setFee] = useState(appt.consultation_fee || 0);
+  const [isFree, setIsFree] = useState(appt.is_free);
+  const [saving, setSaving] = useState(false);
   const dateLabel = new Date(appt.appointment_date).toLocaleDateString('en-GB', {
     weekday: 'long',
     day: 'numeric',
@@ -4428,6 +4715,28 @@ function ConfirmationReceipt({
     year: 'numeric'
   }) : '';
   const shareLink = window.location.origin + window.location.pathname + '?apt=' + appt.id;
+  async function handleSaveEdit() {
+    setSaving(true);
+    const {
+      error
+    } = await sb.from('appointments').update({
+      status,
+      reason,
+      appointment_date: apptDate,
+      appointment_time: apptTime,
+      duration_minutes: Number(duration),
+      consultation_fee: isFree ? 0 : Number(fee),
+      is_free: isFree
+    }).eq('id', appt.id);
+    setSaving(false);
+    if (error) {
+      toast && toast('Failed to update: ' + error.message, 'error');
+      return;
+    }
+    toast && toast('Appointment updated');
+    setMode('view');
+    onUpdated && onUpdated();
+  }
   function handlePrint() {
     const printContents = printRef.current.innerHTML;
     const win = window.open('', '_blank');
@@ -4514,7 +4823,130 @@ function ConfirmationReceipt({
       padding: 28
     },
     onClick: e => e.stopPropagation()
+  }, !onBookAnother && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'flex-end',
+      gap: 8,
+      marginBottom: 8
+    }
+  }, mode === 'view' ? /*#__PURE__*/React.createElement("button", {
+    className: "a-btn-outline",
+    onClick: () => setMode('edit')
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fa-regular fa-pen-to-square"
+  }), " Edit Appointment") : /*#__PURE__*/React.createElement("button", {
+    className: "a-btn-primary",
+    onClick: handleSaveEdit,
+    disabled: saving
+  }, saving ? 'Saving...' : 'Save Changes')), mode === 'edit' ? /*#__PURE__*/React.createElement("div", {
+    className: "a-panel",
+    style: {
+      marginBottom: 18
+    }
   }, /*#__PURE__*/React.createElement("div", {
+    className: "a-panel-title",
+    style: {
+      marginBottom: 14
+    }
+  }, "Edit Appointment"), /*#__PURE__*/React.createElement("label", {
+    className: "a-label"
+  }, "Status"), /*#__PURE__*/React.createElement("select", {
+    className: "a-input",
+    value: status,
+    onChange: e => setStatus(e.target.value)
+  }, /*#__PURE__*/React.createElement("option", {
+    value: "pending"
+  }, "Pending"), /*#__PURE__*/React.createElement("option", {
+    value: "confirmed"
+  }, "Confirmed"), /*#__PURE__*/React.createElement("option", {
+    value: "completed"
+  }, "Completed"), /*#__PURE__*/React.createElement("option", {
+    value: "cancelled"
+  }, "Cancelled")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "a-label"
+  }, "Date"), /*#__PURE__*/React.createElement("input", {
+    type: "date",
+    className: "a-input",
+    value: apptDate,
+    onChange: e => setApptDate(e.target.value)
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "a-label"
+  }, "Time"), /*#__PURE__*/React.createElement("input", {
+    className: "a-input",
+    value: apptTime,
+    onChange: e => setApptTime(e.target.value),
+    placeholder: "e.g. 11:30 AM"
+  }))), /*#__PURE__*/React.createElement("label", {
+    className: "a-label"
+  }, "Duration (minutes)"), /*#__PURE__*/React.createElement("select", {
+    className: "a-input",
+    value: duration,
+    onChange: e => setDuration(e.target.value)
+  }, /*#__PURE__*/React.createElement("option", {
+    value: "15"
+  }, "15 minutes"), /*#__PURE__*/React.createElement("option", {
+    value: "30"
+  }, "30 minutes"), /*#__PURE__*/React.createElement("option", {
+    value: "45"
+  }, "45 minutes"), /*#__PURE__*/React.createElement("option", {
+    value: "60"
+  }, "60 minutes")), /*#__PURE__*/React.createElement("label", {
+    className: "a-label"
+  }, "Reason"), /*#__PURE__*/React.createElement("textarea", {
+    className: "a-input",
+    rows: 2,
+    value: reason,
+    onChange: e => setReason(e.target.value)
+  }), /*#__PURE__*/React.createElement("label", {
+    className: "a-label"
+  }, "Consultation fee"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8,
+      alignItems: 'center'
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    className: "a-input",
+    style: {
+      marginBottom: 0
+    },
+    value: fee,
+    onChange: e => {
+      setFee(e.target.value);
+      setIsFree(Number(e.target.value) === 0);
+    }
+  }), /*#__PURE__*/React.createElement("label", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 5,
+      fontSize: 12,
+      color: 'var(--surf-muted)',
+      whiteSpace: 'nowrap'
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: isFree,
+    onChange: e => {
+      setIsFree(e.target.checked);
+      if (e.target.checked) setFee(0);
+    }
+  }), " Free"))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 60,
       height: 60,
@@ -4782,7 +5214,7 @@ function ConfirmationReceipt({
     onClick: onBookAnother
   }, /*#__PURE__*/React.createElement("i", {
     className: "fa-solid fa-plus"
-  }), " Book another appointment"))));
+  }), " Book another appointment")))));
 }
 
 function DoctorApp() {
@@ -4891,8 +5323,18 @@ function PublicAppointmentView({
     }, /*#__PURE__*/React.createElement("div", {
       className: "center-card"
     }, /*#__PURE__*/React.createElement("div", {
-      className: "ic"
-    }, "❓"), /*#__PURE__*/React.createElement("h2", {
+      className: "ic",
+      style: {
+        display: 'flex',
+        justifyContent: 'center'
+      }
+    }, /*#__PURE__*/React.createElement("i", {
+      className: "fa-regular fa-circle-question",
+      style: {
+        fontSize: 36,
+        color: 'var(--muted)'
+      }
+    })), /*#__PURE__*/React.createElement("h2", {
       style: {
         fontSize: 18
       }
